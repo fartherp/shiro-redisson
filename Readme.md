@@ -12,6 +12,6 @@
         <dependency>
             <groupId>com.github.fartherp</groupId>
             <artifactId>shiro-redisson</artifactId>
-            <version>1.0.0</version>
+            <version>1.0.1</version>
         </dependency>
 ```
