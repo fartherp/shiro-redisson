@@ -109,12 +109,18 @@ public class RedisCache<K, V> implements Cache<K, V> {
         RBucket<V> v = redisCacheManager.getRedissonClient().getBucket(getRedisCacheKey(key));
         V value = v.get();
         v.delete();
+        RSet<K> keys = redisCacheManager.getRedissonClient().getSet(cacheKeyPrefix);
+        keys.remove(key);
         return value;
     }
 
     public void clear() throws CacheException {
-        RSet<String> keys = redisCacheManager.getRedissonClient().getSet(cacheKeyPrefix);
+        RSet<K> keys = redisCacheManager.getRedissonClient().getSet(cacheKeyPrefix);
         keys.delete();
+        for (K key : keys) {
+            RBucket<V> v = redisCacheManager.getRedissonClient().getBucket(getRedisCacheKey(key));
+            v.delete();
+        }
     }
 
     public int size() {
@@ -133,7 +139,10 @@ public class RedisCache<K, V> implements Cache<K, V> {
         List<V> values = new ArrayList<>(keys.size());
         for (K key : keys) {
             RBucket<V> v = redisCacheManager.getRedissonClient().getBucket(getRedisCacheKey(key));
-            values.add(v.get());
+            V value = v.get();
+            if (value != null) {
+                values.add(value);
+            }
         }
 
         return Collections.unmodifiableList(values);

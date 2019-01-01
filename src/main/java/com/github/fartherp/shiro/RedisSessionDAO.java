@@ -122,6 +122,10 @@ public class RedisSessionDAO extends AbstractSessionDAO {
 
         RBucket<Session> s = redisCacheManager.getRedissonClient().getBucket(getRedisSessionKey(session.getId()), serializationCodec);
         s.delete();
+
+        RSet<String> keys = redisCacheManager.getRedissonClient().getSet(sessionKeyPrefix);
+        String key = getRedisSessionKey(session.getId());
+        keys.remove(key);
     }
 
     public Collection<Session> getActiveSessions() {
