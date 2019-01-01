@@ -135,7 +135,10 @@ public class RedisSessionDAO extends AbstractSessionDAO {
         List<Session> values = new ArrayList<>(keys.size());
         for (String key : keys) {
             RBucket<Session> v = redisCacheManager.getRedissonClient().getBucket(getRedisSessionKey(key), serializationCodec);
-            values.add(v.get());
+            Session session = v.get();
+            if (session != null) {
+                values.add(session);
+            }
         }
         return Collections.unmodifiableList(values);
     }
