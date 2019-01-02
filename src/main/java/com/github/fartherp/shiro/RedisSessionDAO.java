@@ -52,7 +52,11 @@ public class RedisSessionDAO extends AbstractSessionDAO {
 
     private RedisCacheManager redisCacheManager;
 
-    private SerializationCodec serializationCodec = new SerializationCodec();
+    private SerializationCodec serializationCodec;
+
+    public RedisSessionDAO() {
+        this.serializationCodec = new SerializationCodec(this.getClass().getClassLoader());
+    }
 
     private String getRedisSessionKey(Serializable sessionId) {
         return this.sessionKeyPrefix + ":" + sessionId;
