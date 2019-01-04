@@ -91,13 +91,14 @@ public class RedisSessionDAO extends AbstractSessionDAO {
 
         String key = getRedisSessionKey(session.getId());
         RBucket<Session> s = redisCacheManager.getRedissonClient().getBucket(key, serializationCodec);
+        Date date;
         if (expire == DEFAULT_EXPIRE) {
             s.set(session, session.getTimeout(), TimeUnit.MILLISECONDS);
+            date = DateUtil.getDateByCalendar(new Date(), Calendar.MILLISECOND, (int) session.getTimeout());
         } else {
-            s.set(session);
+            s.set(session, redisCacheManager.getTtl(), TimeUnit.MINUTES);
+            date = DateUtil.getDateByCalendar(new Date(), Calendar.MINUTE, (int) redisCacheManager.getTtl());
         }
-
-        Date date = DateUtil.getDateByCalendar(new Date(), Calendar.MILLISECOND, (int) session.getTimeout());
         sessionKeys.add(date.getTime(), key);
     }
 
