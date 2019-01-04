@@ -4,17 +4,20 @@
 
 package com.github.fartherp.shiro;
 
+import com.github.fartherp.framework.common.util.DateUtil;
 import io.netty.util.concurrent.FastThreadLocal;
 import org.apache.shiro.session.Session;
 import org.apache.shiro.session.UnknownSessionException;
 import org.apache.shiro.session.mgt.eis.AbstractSessionDAO;
 import org.apache.shiro.util.Assert;
 import org.redisson.api.RBucket;
-import org.redisson.api.RSet;
+import org.redisson.api.RScoredSortedSet;
+import org.redisson.client.protocol.ScoredEntry;
 import org.redisson.codec.SerializationCodec;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -54,8 +57,16 @@ public class RedisSessionDAO extends AbstractSessionDAO {
 
     private SerializationCodec serializationCodec;
 
-    public RedisSessionDAO() {
+    private RScoredSortedSet<String> sessionKeys;
+
+    private ClearCache clearCache;
+
+    public RedisSessionDAO(RedisCacheManager redisCacheManager) {
+        this.redisCacheManager = redisCacheManager;
         this.serializationCodec = new SerializationCodec(this.getClass().getClassLoader());
+        this.sessionKeys = this.redisCacheManager.getRedissonClient().getScoredSortedSet(sessionKeyPrefix);
+        this.clearCache = new ClearCache(this);
+        this.clearCache.init();
     }
 
     private String getRedisSessionKey(Serializable sessionId) {
@@ -85,8 +96,9 @@ public class RedisSessionDAO extends AbstractSessionDAO {
         } else {
             s.set(session);
         }
-        RSet<String> keys = redisCacheManager.getRedissonClient().getSet(sessionKeyPrefix);
-        keys.add(key);
+
+        Date date = DateUtil.getDateByCalendar(new Date(), Calendar.MILLISECOND, (int) session.getTimeout());
+        sessionKeys.add(date.getTime(), key);
     }
 
     protected Session doReadSession(Serializable sessionId) {
@@ -127,18 +139,19 @@ public class RedisSessionDAO extends AbstractSessionDAO {
         RBucket<Session> s = redisCacheManager.getRedissonClient().getBucket(getRedisSessionKey(session.getId()), serializationCodec);
         s.delete();
 
-        RSet<String> keys = redisCacheManager.getRedissonClient().getSet(sessionKeyPrefix);
         String key = getRedisSessionKey(session.getId());
-        keys.remove(key);
+        sessionKeys.remove(key);
     }
 
     public Collection<Session> getActiveSessions() {
         Assert.notNull(redisCacheManager, "redisCacheManager is no null");
 
-        RSet<String> keys = redisCacheManager.getRedissonClient().getSet(sessionKeyPrefix);
+        // 获取存活的session
+        List<ScoredEntry<String>> keys = (List<ScoredEntry<String>>) sessionKeys.entryRange(new Date().getTime(), false, Double.MAX_VALUE, true);
+
         List<Session> values = new ArrayList<>(keys.size());
-        for (String key : keys) {
-            RBucket<Session> v = redisCacheManager.getRedissonClient().getBucket(getRedisSessionKey(key), serializationCodec);
+        for (ScoredEntry<String> key : keys) {
+            RBucket<Session> v = redisCacheManager.getRedissonClient().getBucket(getRedisSessionKey(key.getValue()), serializationCodec);
             Session session = v.get();
             if (session != null) {
                 values.add(session);
@@ -216,7 +229,7 @@ public class RedisSessionDAO extends AbstractSessionDAO {
         return redisCacheManager;
     }
 
-    public void setRedisCacheManager(RedisCacheManager redisCacheManager) {
-        this.redisCacheManager = redisCacheManager;
+    public RScoredSortedSet<String> getSessionKeys() {
+        return sessionKeys;
     }
 }

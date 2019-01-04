@@ -28,14 +28,20 @@ public class RedisCacheManager implements CacheManager {
     public static final String DEFAULT_PRINCIPAL_ID_FIELD_NAME = "id";
     private String principalIdFieldName = DEFAULT_PRINCIPAL_ID_FIELD_NAME;
 
+    private long ttl = 30L;
+
     private RedissonClient redissonClient;
+
+    public RedisCacheManager(RedissonClient redissonClient) {
+        this.redissonClient = redissonClient;
+    }
 
     @SuppressWarnings("all")
     public <K, V> Cache<K, V> getCache(String name) throws CacheException {
         Assert.notNull(redissonClient, "RedissonClient is no null");
         Cache cache = caches.get(name);
         if (cache == null) {
-            cache = new RedisCache<K, V>(this, keyPrefix + name, principalIdFieldName);
+            cache = new RedisCache<K, V>(this, keyPrefix + name, principalIdFieldName, ttl);
             caches.put(name, cache);
         }
         return cache;
@@ -53,7 +59,11 @@ public class RedisCacheManager implements CacheManager {
         return redissonClient;
     }
 
-    public void setRedissonClient(RedissonClient redissonClient) {
-        this.redissonClient = redissonClient;
+    public long getTtl() {
+        return ttl;
+    }
+
+    public ConcurrentMap<String, Cache> getCaches() {
+        return caches;
     }
 }

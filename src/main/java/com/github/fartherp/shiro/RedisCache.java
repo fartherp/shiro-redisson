@@ -4,6 +4,7 @@
 
 package com.github.fartherp.shiro;
 
+import com.github.fartherp.framework.common.util.DateUtil;
 import com.github.fartherp.shiro.exception.CacheManagerPrincipalIdNotAssignedException;
 import com.github.fartherp.shiro.exception.PrincipalIdNullException;
 import com.github.fartherp.shiro.exception.PrincipalInstanceException;
@@ -11,15 +12,20 @@ import org.apache.shiro.cache.Cache;
 import org.apache.shiro.cache.CacheException;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.redisson.api.RBucket;
-import org.redisson.api.RSet;
+import org.redisson.api.RScoredSortedSet;
+import org.redisson.client.protocol.ScoredEntry;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by IntelliJ IDEA.
@@ -29,16 +35,22 @@ import java.util.Set;
  */
 public class RedisCache<K, V> implements Cache<K, V> {
 
+    private long ttl;
+
     private RedisCacheManager redisCacheManager;
 
     private String cacheKeyPrefix;
 
     private String principalIdFieldName;
 
-    public RedisCache(RedisCacheManager redisCacheManager, String keyPrefix, String principalIdFieldName) {
+    private RScoredSortedSet<K> cacheKeys;
+
+    public RedisCache(RedisCacheManager redisCacheManager, String keyPrefix, String principalIdFieldName, long ttl) {
         this.redisCacheManager = redisCacheManager;
         this.cacheKeyPrefix = keyPrefix;
         this.principalIdFieldName = principalIdFieldName;
+        this.ttl = ttl;
+        this.cacheKeys = redisCacheManager.getRedissonClient().getScoredSortedSet(this.cacheKeyPrefix);
     }
 
     private String getRedisCacheKey(K key) {
@@ -98,10 +110,11 @@ public class RedisCache<K, V> implements Cache<K, V> {
     }
 
     public V put(K key, V value) throws CacheException {
-        RSet<K> keys = redisCacheManager.getRedissonClient().getSet(cacheKeyPrefix);
-        keys.add(key);
         RBucket<V> v = redisCacheManager.getRedissonClient().getBucket(getRedisCacheKey(key));
-        v.set(value);
+        v.set(value, ttl, TimeUnit.MINUTES);
+
+        Date date = DateUtil.getDateByCalendar(new Date(), Calendar.MINUTE, (int) ttl);
+        cacheKeys.add(date.getTime(), key);
         return value;
     }
 
@@ -109,36 +122,38 @@ public class RedisCache<K, V> implements Cache<K, V> {
         RBucket<V> v = redisCacheManager.getRedissonClient().getBucket(getRedisCacheKey(key));
         V value = v.get();
         v.delete();
-        RSet<K> keys = redisCacheManager.getRedissonClient().getSet(cacheKeyPrefix);
-        keys.remove(key);
+        cacheKeys.remove(key);
         return value;
     }
 
     public void clear() throws CacheException {
-        RSet<K> keys = redisCacheManager.getRedissonClient().getSet(cacheKeyPrefix);
-        keys.delete();
-        for (K key : keys) {
+        for (K key : cacheKeys) {
             RBucket<V> v = redisCacheManager.getRedissonClient().getBucket(getRedisCacheKey(key));
             v.delete();
         }
+        cacheKeys.delete();
     }
 
     public int size() {
-        RSet<String> keys = redisCacheManager.getRedissonClient().getSet(cacheKeyPrefix);
+        List<ScoredEntry<K>> keys = (List<ScoredEntry<K>>) cacheKeys.entryRange(new Date().getTime(), false, Double.MAX_VALUE, true);
         return keys.size();
     }
 
     public Set<K> keys() {
-        RSet<K> keys = redisCacheManager.getRedissonClient().getSet(cacheKeyPrefix);
-        return keys;
+        Set<K> set = new HashSet<>();
+        List<ScoredEntry<K>> keys = (List<ScoredEntry<K>>) cacheKeys.entryRange(new Date().getTime(), false, Double.MAX_VALUE, true);
+        for (ScoredEntry<K> entry : keys) {
+            set.add(entry.getValue());
+        }
+        return set;
     }
 
     public Collection<V> values() {
-        RSet<K> keys = redisCacheManager.getRedissonClient().getSet(cacheKeyPrefix);
+        List<ScoredEntry<K>> keys = (List<ScoredEntry<K>>) cacheKeys.entryRange(new Date().getTime(), false, Double.MAX_VALUE, true);
 
         List<V> values = new ArrayList<>(keys.size());
-        for (K key : keys) {
-            RBucket<V> v = redisCacheManager.getRedissonClient().getBucket(getRedisCacheKey(key));
+        for (ScoredEntry<K> key : keys) {
+            RBucket<V> v = redisCacheManager.getRedissonClient().getBucket(getRedisCacheKey(key.getValue()));
             V value = v.get();
             if (value != null) {
                 values.add(value);
@@ -146,5 +161,9 @@ public class RedisCache<K, V> implements Cache<K, V> {
         }
 
         return Collections.unmodifiableList(values);
+    }
+
+    public RScoredSortedSet<K> getCacheKeys() {
+        return cacheKeys;
     }
 }
