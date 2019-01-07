@@ -1,6 +1,8 @@
 # shiro-redisson
 ```
-使用redisson包解决redis缓存，解决shiro-redis使用*查询时，导致redis长时间卡死
+1.使用redisson包解决redis缓存
+2.解决shiro-redis使用*查询时，导致redis长时间卡死
+3.解决使用spring-boot-devtools，出现ClassCastException异常
 ```
 ## JDK
 > 1.8
