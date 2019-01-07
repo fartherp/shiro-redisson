@@ -38,7 +38,6 @@ public class RedisSessionListener implements SessionListener {
     public void onStop(Session session) {
         LOGGER.debug("session onStop ID: " + session.getId());
         this.sessionDAO.delete(session);
-        this.cachingRealm.onLogout(SecurityUtils.getSubject().getPrincipals());
     }
 
     public void onExpiration(Session session) {
