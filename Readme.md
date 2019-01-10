@@ -19,7 +19,7 @@
 ```
 
 ## java使用
-```java
+``` java
 
     @Bean
     public MyShiroRealm myShiroRealm() {
@@ -27,10 +27,11 @@
     }
     
     @Bean
-    public SessionManager sessionManager(SessionDAO redisSessionDAO, ObjectProvider<List<SessionListener>> sessionListenersProvider) {
+    public SessionManager sessionManager(SessionDAO redisSessionDAO, ObjectProvider<SessionListener> sessionListenersProvider) {
+        List<SessionListener> sessionListeners = sessionListenersProvider.stream().collect(Collectors.toList());
         DefaultWebSessionManager sessionManager = new DefaultWebSessionManager();
         sessionManager.setSessionDAO(redisSessionDAO);
-        sessionManager.setSessionListeners(sessionListenersProvider.getIfAvailable());
+        sessionManager.setSessionListeners(sessionListeners);
         return mySessionManager;
     }
 
@@ -38,8 +39,8 @@
     * 内置session监听器，保证删除session/cache冗余的数据信息
     */
     @Bean
-    public List<SessionListener> sessionListener(SessionDAO redisSessionDAO, MyShiroRealm myShiroRealm) {
-        return Collections.singletonList(new RedisSessionListener(redisSessionDAO, myShiroRealm));
+    public SessionListener sessionListener(SessionDAO redisSessionDAO, MyShiroRealm myShiroRealm) {
+        return new RedisSessionListener(redisSessionDAO, myShiroRealm);
     }
 
     @Bean
