@@ -206,7 +206,9 @@ public class RedisSessionDAO extends AbstractSessionDAO {
     }
 
     public void setExpire(ExpireType expireType) {
-        this.expire = expireType.type;
+        if (expireType != null) {
+            this.expire = expireType.type;
+        }
     }
 
     public boolean isSessionInMemoryEnabled() {

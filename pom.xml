@@ -9,7 +9,7 @@
     <groupId>com.github.fartherp</groupId>
     <artifactId>shiro-redisson</artifactId>
     <packaging>jar</packaging>
-    <version>1.0.6</version>
+    <version>1.0.7-SNAPSHOT</version>
 
     <name>shiro-redisson</name>
     <url>https://github.com/fartherp/shiro-redisson</url>
