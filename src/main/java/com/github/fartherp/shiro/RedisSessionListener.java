@@ -12,6 +12,8 @@ import org.apache.shiro.session.mgt.eis.SessionDAO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+
 /**
  * Created by IntelliJ IDEA.
  *
@@ -24,11 +26,11 @@ public class RedisSessionListener implements SessionListener {
 
     private SessionDAO sessionDAO;
 
-    private CachingRealm cachingRealm;
+    private List<CachingRealm> cachingRealms;
 
-    public RedisSessionListener(SessionDAO sessionDAO, CachingRealm cachingRealm) {
+    public RedisSessionListener(SessionDAO sessionDAO, List<CachingRealm> cachingRealms) {
         this.sessionDAO = sessionDAO;
-        this.cachingRealm = cachingRealm;
+        this.cachingRealms = cachingRealms;
     }
 
     public void onStart(Session session) {
@@ -43,6 +45,6 @@ public class RedisSessionListener implements SessionListener {
     public void onExpiration(Session session) {
         LOGGER.debug("session onExpiration ID: " + session.getId());
         this.sessionDAO.delete(session);
-        this.cachingRealm.onLogout(SecurityUtils.getSubject().getPrincipals());
+        this.cachingRealms.forEach(o -> o.onLogout(SecurityUtils.getSubject().getPrincipals()));
     }
 }
