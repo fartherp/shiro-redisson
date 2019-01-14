@@ -6,6 +6,7 @@ package com.github.fartherp.shiro;
 
 import com.github.fartherp.framework.common.util.DateUtil;
 import io.netty.util.concurrent.FastThreadLocal;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.session.Session;
 import org.apache.shiro.session.UnknownSessionException;
 import org.apache.shiro.session.mgt.eis.AbstractSessionDAO;
@@ -37,11 +38,7 @@ public class RedisSessionDAO extends AbstractSessionDAO {
     private static final String DEFAULT_SESSION_KEY_PREFIX = "shiro:session";
     private String sessionKeyPrefix = DEFAULT_SESSION_KEY_PREFIX;
 
-    private static final int DEFAULT_EXPIRE = -2;
-
-    private static final int NO_EXPIRE = -1;
-
-    private int expire = DEFAULT_EXPIRE;
+    private int expire = ExpireType.DEFAULT_EXPIRE.type;
 
     private static final boolean DEFAULT_SESSION_IN_MEMORY_ENABLED = true;
 
@@ -92,7 +89,7 @@ public class RedisSessionDAO extends AbstractSessionDAO {
         String key = getRedisSessionKey(session.getId());
         RBucket<Session> s = redisCacheManager.getRedissonClient().getBucket(key, serializationCodec);
         Date date;
-        if (expire == DEFAULT_EXPIRE) {
+        if (expire == ExpireType.DEFAULT_EXPIRE.type) {
             s.set(session, session.getTimeout(), TimeUnit.MILLISECONDS);
             date = DateUtil.getDateByCalendar(new Date(), Calendar.MILLISECOND, (int) session.getTimeout());
         } else {
@@ -199,15 +196,17 @@ public class RedisSessionDAO extends AbstractSessionDAO {
     }
 
     public void setSessionKeyPrefix(String sessionKeyPrefix) {
-        this.sessionKeyPrefix = sessionKeyPrefix;
+        if (StringUtils.isNotBlank(sessionKeyPrefix)) {
+            this.sessionKeyPrefix = sessionKeyPrefix;
+        }
     }
 
     public int getExpire() {
         return expire;
     }
 
-    public void setExpire(int expire) {
-        this.expire = expire;
+    public void setExpire(ExpireType expireType) {
+        this.expire = expireType.type;
     }
 
     public boolean isSessionInMemoryEnabled() {
@@ -223,7 +222,9 @@ public class RedisSessionDAO extends AbstractSessionDAO {
     }
 
     public void setSessionInMemoryTimeout(long sessionInMemoryTimeout) {
-        this.sessionInMemoryTimeout = sessionInMemoryTimeout;
+        if (sessionInMemoryTimeout > 0) {
+            this.sessionInMemoryTimeout = sessionInMemoryTimeout;
+        }
     }
 
     public RedisCacheManager getRedisCacheManager() {
