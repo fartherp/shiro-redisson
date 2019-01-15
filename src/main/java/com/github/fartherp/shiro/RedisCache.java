@@ -8,6 +8,7 @@ import com.github.fartherp.framework.common.util.DateUtil;
 import com.github.fartherp.shiro.exception.CacheManagerPrincipalIdNotAssignedException;
 import com.github.fartherp.shiro.exception.PrincipalIdNullException;
 import com.github.fartherp.shiro.exception.PrincipalInstanceException;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.cache.Cache;
 import org.apache.shiro.cache.CacheException;
 import org.apache.shiro.subject.PrincipalCollection;
@@ -98,7 +99,7 @@ public class RedisCache<K, V> implements Cache<K, V> {
     }
 
     private String getPrincipalIdMethodName() {
-        if (this.principalIdFieldName == null || "".equals(this.principalIdFieldName)) {
+        if (StringUtils.isBlank(this.principalIdFieldName)) {
             throw new CacheManagerPrincipalIdNotAssignedException();
         }
         return "get" + this.principalIdFieldName.substring(0, 1).toUpperCase() + this.principalIdFieldName.substring(1);
