@@ -1,4 +1,8 @@
 # shiro-redisson
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.fartherp/shiro-redisson/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.fartherp/shiro-redisson/)
+
+功能简介
+
 ```
 1.使用redisson包解决redis缓存
 2.解决shiro-redis使用*查询时，导致redis长时间卡死
@@ -7,16 +11,21 @@
 ## JDK
 > 1.8
 
-# 如何使用？
-1. 引入Maven依赖或下载jar包
+## 如何使用？
+1. 在项目中加入```shiro-redisson```依赖
 
-``` xml
-        <dependency>
-            <groupId>com.github.fartherp</groupId>
-            <artifactId>shiro-redisson</artifactId>
-            <version>x.x.x</version>
-        </dependency>
-```
+    ```Maven```
+    ``` xml
+    <dependency>
+        <groupId>com.github.fartherp</groupId>
+        <artifactId>shiro-redisson</artifactId>
+        <version>1.0.7</version>
+    </dependency>
+    ```
+    ```Gradle```
+    ```
+    compile 'com.github.fartherp:shiro-redisson:1.0.7'
+    ```
 
 ## java使用
 ``` java
