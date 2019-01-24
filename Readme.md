@@ -1,5 +1,8 @@
 # shiro-redisson
+[![Build Status](https://travis-ci.org/fartherp/shiro-redisson.svg?branch=master)](https://travis-ci.org/fartherp/shiro-redisson)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.fartherp/shiro-redisson/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.fartherp/shiro-redisson/)
+[![GitHub release](https://img.shields.io/github/release/fartherp/shiro-redisson.svg)](https://github.com/fartherp/shiro-redisson/releases)
+[![License](https://img.shields.io/badge/license-Apache%202-4EB1BA.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
 
 功能简介
 
