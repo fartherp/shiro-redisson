@@ -4,14 +4,13 @@
 
 package com.github.fartherp.shiro;
 
-import com.github.fartherp.framework.common.util.DateUtil;
 import com.github.fartherp.shiro.exception.CacheManagerPrincipalIdNotAssignedException;
 import com.github.fartherp.shiro.exception.PrincipalIdNullException;
 import com.github.fartherp.shiro.exception.PrincipalInstanceException;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.cache.Cache;
 import org.apache.shiro.cache.CacheException;
 import org.apache.shiro.subject.PrincipalCollection;
+import org.apache.shiro.util.StringUtils;
 import org.redisson.api.RBucket;
 import org.redisson.api.RScoredSortedSet;
 import org.redisson.client.protocol.ScoredEntry;
@@ -19,7 +18,6 @@ import org.redisson.client.protocol.ScoredEntry;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -99,7 +97,7 @@ public class RedisCache<K, V> implements Cache<K, V> {
     }
 
     private String getPrincipalIdMethodName() {
-        if (StringUtils.isBlank(this.principalIdFieldName)) {
+        if (!StringUtils.hasText(this.principalIdFieldName)) {
             throw new CacheManagerPrincipalIdNotAssignedException();
         }
         return "get" + this.principalIdFieldName.substring(0, 1).toUpperCase() + this.principalIdFieldName.substring(1);
@@ -114,8 +112,7 @@ public class RedisCache<K, V> implements Cache<K, V> {
         RBucket<V> v = redisCacheManager.getRedissonClient().getBucket(getRedisCacheKey(key));
         v.set(value, ttl, TimeUnit.MINUTES);
 
-        Date date = DateUtil.getDateByCalendar(new Date(), Calendar.MINUTE, (int) ttl);
-        cacheKeys.add(date.getTime(), key);
+        cacheKeys.add(LocalDateTimeUtilies.getTimestamp(o -> o.plusMinutes(ttl)), key);
         return value;
     }
 

@@ -4,11 +4,11 @@
 
 package com.github.fartherp.shiro;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.cache.Cache;
 import org.apache.shiro.cache.CacheException;
 import org.apache.shiro.cache.CacheManager;
 import org.apache.shiro.util.Assert;
+import org.apache.shiro.util.StringUtils;
 import org.redisson.api.RedissonClient;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -53,7 +53,7 @@ public class RedisCacheManager implements CacheManager {
     }
 
     public void setKeyPrefix(String keyPrefix) {
-        if (StringUtils.isNotBlank(keyPrefix)) {
+        if (StringUtils.hasText(keyPrefix)) {
             this.keyPrefix = keyPrefix;
         }
     }
@@ -77,7 +77,7 @@ public class RedisCacheManager implements CacheManager {
     }
 
     public void setPrincipalIdFieldName(String principalIdFieldName) {
-        if (StringUtils.isNotBlank(principalIdFieldName)) {
+        if (StringUtils.hasText(principalIdFieldName)) {
             this.principalIdFieldName = principalIdFieldName;
         }
     }
