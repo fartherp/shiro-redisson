@@ -12,6 +12,7 @@
 1.使用redisson包解决redis缓存
 2.解决shiro-redis使用*查询时，导致redis长时间卡死
 3.解决使用spring-boot-devtools，出现ClassCastException异常
+4.支持redisson提供的编码类型，https://github.com/redisson/redisson/wiki/4.-data-serialization
 ```
 ## JDK
 > 1.8
@@ -24,12 +25,12 @@
     <dependency>
         <groupId>com.github.fartherp</groupId>
         <artifactId>shiro-redisson</artifactId>
-        <version>1.0.7</version>
+        <version>1.0.9</version>
     </dependency>
     ```
     ```Gradle```
     ```
-    compile 'com.github.fartherp:shiro-redisson:1.0.7'
+    compile 'com.github.fartherp:shiro-redisson:1.0.9'
     ```
 
 ## java使用
