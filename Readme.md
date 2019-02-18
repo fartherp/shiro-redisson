@@ -25,12 +25,12 @@
     <dependency>
         <groupId>com.github.fartherp</groupId>
         <artifactId>shiro-redisson</artifactId>
-        <version>1.0.9</version>
+        <version>1.1.0</version>
     </dependency>
     ```
     ```Gradle```
     ```
-    compile 'com.github.fartherp:shiro-redisson:1.0.9'
+    compile 'com.github.fartherp:shiro-redisson:1.1.0'
     ```
 
 ## java使用
