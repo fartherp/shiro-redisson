@@ -55,7 +55,7 @@ public class RedisSessionDAO extends AbstractSessionDAO {
 
     private RedisCacheManager redisCacheManager;
 
-    private Codec codec = CodecType.FST_CODEC.codec;
+    private Codec codec = CodecType.FST_CODEC.getCodec();
 
     private RScoredSortedSet<String> sessionKeys;
 
@@ -236,8 +236,9 @@ public class RedisSessionDAO extends AbstractSessionDAO {
 
     public void setCodec(CodecType codecType) {
         if (codecType != null) {
-            if (codecType.throwable == null) {
-                this.codec = codecType.codec;
+            Codec codec = codecType.getCodec();
+            if (codec != null) {
+                this.codec = codec;
             } else {
                 LOGGER.info("Lack of dependency packages is {}, use default codec", codecType.dependencyPackageName);
             }
