@@ -20,11 +20,10 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * Created by IntelliJ IDEA.
@@ -86,7 +85,7 @@ public class RedisCache<K, V> implements Cache<K, V> {
     }
 
     private Method getPrincipalIdGetter(Object principalObject) {
-        Method pincipalIdGetter = null;
+        Method pincipalIdGetter;
         String principalIdMethodName = this.getPrincipalIdMethodName();
         try {
             pincipalIdGetter = principalObject.getClass().getMethod(principalIdMethodName);
@@ -133,21 +132,17 @@ public class RedisCache<K, V> implements Cache<K, V> {
     }
 
     public int size() {
-        List<ScoredEntry<K>> keys = (List<ScoredEntry<K>>) cacheKeys.entryRange(new Date().getTime(), false, Double.MAX_VALUE, true);
+        List<ScoredEntry<K>> keys = (List<ScoredEntry<K>>) cacheKeys.entryRange(System.currentTimeMillis(), false, Double.MAX_VALUE, true);
         return keys.size();
     }
 
     public Set<K> keys() {
-        Set<K> set = new HashSet<>();
-        List<ScoredEntry<K>> keys = (List<ScoredEntry<K>>) cacheKeys.entryRange(new Date().getTime(), false, Double.MAX_VALUE, true);
-        for (ScoredEntry<K> entry : keys) {
-            set.add(entry.getValue());
-        }
-        return set;
+        List<ScoredEntry<K>> keys = (List<ScoredEntry<K>>) cacheKeys.entryRange(System.currentTimeMillis(), false, Double.MAX_VALUE, true);
+        return keys.stream().map(ScoredEntry::getValue).collect(Collectors.toSet());
     }
 
     public Collection<V> values() {
-        List<ScoredEntry<K>> keys = (List<ScoredEntry<K>>) cacheKeys.entryRange(new Date().getTime(), false, Double.MAX_VALUE, true);
+        List<ScoredEntry<K>> keys = (List<ScoredEntry<K>>) cacheKeys.entryRange(System.currentTimeMillis(), false, Double.MAX_VALUE, true);
 
         List<V> values = new ArrayList<>(keys.size());
         for (ScoredEntry<K> key : keys) {

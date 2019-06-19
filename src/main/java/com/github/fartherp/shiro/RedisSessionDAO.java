@@ -108,7 +108,7 @@ public class RedisSessionDAO extends AbstractSessionDAO {
         if (sessionId == null) {
             return null;
         }
-        Session session = null;
+        Session session;
         if (this.sessionInMemoryEnabled) {
             session = getSessionFromThreadLocal(sessionId);
             if (session != null) {
@@ -150,7 +150,7 @@ public class RedisSessionDAO extends AbstractSessionDAO {
         Assert.notNull(redisCacheManager, "redisCacheManager is no null");
 
         // 获取存活的session
-        List<ScoredEntry<String>> keys = (List<ScoredEntry<String>>) sessionKeys.entryRange(new Date().getTime(), false, Double.MAX_VALUE, true);
+        List<ScoredEntry<String>> keys = (List<ScoredEntry<String>>) sessionKeys.entryRange(System.currentTimeMillis(), false, Double.MAX_VALUE, true);
 
         List<Session> values = new ArrayList<>(keys.size());
         for (ScoredEntry<String> key : keys) {
@@ -184,8 +184,7 @@ public class RedisSessionDAO extends AbstractSessionDAO {
         if (sessionWrapper == null) {
             return null;
         }
-        Date now = new Date();
-        long duration = now.getTime() - sessionWrapper.getCreateTime().getTime();
+        long duration = System.currentTimeMillis() - sessionWrapper.getCreateTime().getTime();
         Session s = null;
         if (duration < sessionInMemoryTimeout) {
             s = sessionWrapper.getSession();

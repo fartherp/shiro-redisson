@@ -11,11 +11,10 @@ import org.apache.shiro.cache.Cache;
 import org.redisson.api.RScoredSortedSet;
 import org.redisson.client.protocol.ScoredEntry;
 
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * Created by IntelliJ IDEA.
@@ -38,27 +37,24 @@ public class ClearCache implements TimerTask {
 
     public void clearSession() {
         RScoredSortedSet<String> sessionKeys = redisSessionDAO.getSessionKeys();
-        List<ScoredEntry<String>> keys = (List<ScoredEntry<String>>) sessionKeys.entryRange(0, false, new Date().getTime(), true);
-        List<String> destroyKeys = new ArrayList<>();
-        for (ScoredEntry<String> key : keys) {
-            destroyKeys.add(key.getValue());
-        }
+        List<ScoredEntry<String>> keys = (List<ScoredEntry<String>>) sessionKeys.entryRange(0, false, System.currentTimeMillis(), true);
+        List<String> destroyKeys = keys.stream().map(ScoredEntry::getValue).collect(Collectors.toList());
         if (destroyKeys.size() > 0) {
             sessionKeys.removeAll(destroyKeys);
         }
     }
 
+    @SuppressWarnings("unchecked")
     public void clearCache() {
         ConcurrentMap<String, Cache> caches = redisSessionDAO.getRedisCacheManager().getCaches();
         caches.forEach((k, v) -> {
             RedisCache redisCache = (RedisCache) v;
             RScoredSortedSet cacheKeys = redisCache.getCacheKeys();
-            List<ScoredEntry> keys = (List<ScoredEntry>) cacheKeys.entryRange(0, false, new Date().getTime(), true);
-            List<Object> destroyKeys = new ArrayList<>();
-            for (ScoredEntry key : keys) {
-                destroyKeys.add(key.getValue());
+            List<ScoredEntry> keys = (List<ScoredEntry>) cacheKeys.entryRange(0, false, System.currentTimeMillis(), true);
+            List<Object> destroyKeys = keys.stream().map(ScoredEntry::getValue).collect(Collectors.toList());
+            if (destroyKeys.size() > 0) {
+                cacheKeys.removeAll(destroyKeys);
             }
-            cacheKeys.removeAll(destroyKeys);
         });
     }
 
