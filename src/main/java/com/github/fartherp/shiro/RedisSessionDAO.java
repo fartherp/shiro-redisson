@@ -38,16 +38,16 @@ public class RedisSessionDAO extends AbstractSessionDAO {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RedisSessionDAO.class);
 
-    private static final String DEFAULT_SESSION_KEY_PREFIX = "shiro:session";
+    public static final String DEFAULT_SESSION_KEY_PREFIX = "shiro:session";
     private String sessionKeyPrefix = DEFAULT_SESSION_KEY_PREFIX;
 
     private int expire = ExpireType.DEFAULT_EXPIRE.type;
 
-    private static final boolean DEFAULT_SESSION_IN_MEMORY_ENABLED = true;
+    public static final boolean DEFAULT_SESSION_IN_MEMORY_ENABLED = true;
 
     private boolean sessionInMemoryEnabled = DEFAULT_SESSION_IN_MEMORY_ENABLED;
 
-    private static final long DEFAULT_SESSION_IN_MEMORY_TIMEOUT = 1000L;
+    public static final long DEFAULT_SESSION_IN_MEMORY_TIMEOUT = 1000L;
 
     private long sessionInMemoryTimeout = DEFAULT_SESSION_IN_MEMORY_TIMEOUT;
 
@@ -93,14 +93,14 @@ public class RedisSessionDAO extends AbstractSessionDAO {
 
         String key = getRedisSessionKey(sessionWrapper.getId());
         RBucket<SessionWrapper> s = redisCacheManager.getRedissonClient().getBucket(key, codec);
-        long timestamp;
+        long seconds;
         if (expire == ExpireType.DEFAULT_EXPIRE.type) {
-            s.set(sessionWrapper, sessionWrapper.getTimeout(), TimeUnit.MILLISECONDS);
-            timestamp = LocalDateTimeUtilies.getTimestamp(o -> o.plusSeconds(sessionWrapper.getTimeout() / 1000));
+            seconds = sessionWrapper.getTimeout() / 1000;
         } else {
-            s.set(sessionWrapper, redisCacheManager.getTtl(), TimeUnit.MINUTES);
-            timestamp = LocalDateTimeUtilies.getTimestamp(o -> o.plusMinutes(redisCacheManager.getTtl()));
+            seconds = redisCacheManager.getTtl();
         }
+        s.set(sessionWrapper, seconds, TimeUnit.SECONDS);
+        long timestamp = LocalDateTimeUtilies.getTimestamp(o -> o.plusSeconds(seconds));
         sessionKeys.add(timestamp, key);
     }
 
@@ -154,7 +154,7 @@ public class RedisSessionDAO extends AbstractSessionDAO {
 
         List<Session> values = new ArrayList<>(keys.size());
         for (ScoredEntry<String> key : keys) {
-            RBucket<SessionWrapper> v = redisCacheManager.getRedissonClient().getBucket(getRedisSessionKey(key.getValue()), codec);
+            RBucket<SessionWrapper> v = redisCacheManager.getRedissonClient().getBucket(key.getValue(), codec);
             SessionWrapper sessionWrapper = v.get();
             if (sessionWrapper != null) {
                 values.add(sessionWrapper.getSession());
@@ -231,6 +231,10 @@ public class RedisSessionDAO extends AbstractSessionDAO {
         if (sessionInMemoryTimeout > 0) {
             this.sessionInMemoryTimeout = sessionInMemoryTimeout;
         }
+    }
+
+    public Codec getCodec() {
+        return codec;
     }
 
     public void setCodec(CodecType codecType) {

@@ -109,9 +109,9 @@ public class RedisCache<K, V> implements Cache<K, V> {
 
     public V put(K key, V value) throws CacheException {
         RBucket<V> v = redisCacheManager.getRedissonClient().getBucket(getRedisCacheKey(key));
-        v.set(value, ttl, TimeUnit.MINUTES);
+        v.set(value, ttl, TimeUnit.SECONDS);
 
-        cacheKeys.add(LocalDateTimeUtilies.getTimestamp(o -> o.plusMinutes(ttl)), key);
+        cacheKeys.add(LocalDateTimeUtilies.getTimestamp(o -> o.plusSeconds(ttl)), key);
         return value;
     }
 

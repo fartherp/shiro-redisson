@@ -29,7 +29,9 @@ public class RedisCacheManager implements CacheManager {
     public static final String DEFAULT_PRINCIPAL_ID_FIELD_NAME = "id";
     private String principalIdFieldName = DEFAULT_PRINCIPAL_ID_FIELD_NAME;
 
-    private long ttl = 30L;
+    public final static long MINUTE = 1000 * 60;
+
+    private long ttl = 30 * MINUTE;
 
     private RedissonClient redissonClient;
 
