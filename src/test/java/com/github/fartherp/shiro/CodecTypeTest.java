@@ -4,7 +4,9 @@
 
 package com.github.fartherp.shiro;
 
+import org.redisson.client.codec.ByteArrayCodec;
 import org.redisson.client.codec.Codec;
+import org.redisson.client.codec.LongCodec;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.*;
@@ -20,8 +22,20 @@ import static org.testng.Assert.*;
 public class CodecTypeTest {
 
     @Test
-    public void testGetCodec() {
+    public void testFstGetCodec() {
         Codec codec = CodecType.FST_CODEC.getCodec();
         assertNotNull(codec);
+    }
+
+    @Test
+    public void testLongGetCodec() {
+        Codec codec = CodecType.LONG_CODEC.getCodec();
+        assertEquals(codec, LongCodec.INSTANCE);
+    }
+
+    @Test
+    public void testByteArrayGetCodec() {
+        Codec codec = CodecType.BYTE_ARRAY_CODEC.getCodec();
+        assertEquals(codec, ByteArrayCodec.INSTANCE);
     }
 }

@@ -6,6 +6,8 @@ package com.github.fartherp.shiro;
 
 import org.testng.annotations.Test;
 
+import static org.testng.Assert.*;
+
 /**
  * Created by IntelliJ IDEA.
  * Author: CK
@@ -16,6 +18,6 @@ public class LocalDateTimeUtiliesTest {
     @Test
     public void testGetTimestamp() {
         long s = LocalDateTimeUtilies.getTimestamp(o -> o.plusMinutes(5));
-        System.out.println(s);
+        assertTrue(s > 0);
     }
 }
