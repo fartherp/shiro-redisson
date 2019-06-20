@@ -33,7 +33,7 @@ public class ClearCache implements TimerTask {
     }
 
     public void init() {
-        hashedWheelTimer.newTimeout(this, redisSessionDAO.getRedisCacheManager().getTtl(), TimeUnit.MINUTES);
+        hashedWheelTimer.newTimeout(this, redisSessionDAO.getRedisCacheManager().getTtl(), TimeUnit.SECONDS);
     }
 
     @SuppressWarnings("unchecked")
