@@ -4,6 +4,8 @@
 
 package com.github.fartherp.shiro;
 
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.lang.reflect.Method;
@@ -20,39 +22,50 @@ import static org.testng.Assert.*;
  */
 public class RedisCacheTest extends BaseTest {
 
-    @SuppressWarnings("unchecked")
-    private RedisCache<String, String> redisCache = (RedisCache) redisCacheManager.getCache("test_tmp_redis_cache");
+    private RedisCache<String, String> redisCache;
 
-    @Test(priority = 1)
+	@SuppressWarnings("unchecked")
+	@BeforeMethod
+	public void setUp() {
+		super.setUp();
+		redisCache = (RedisCache) redisCacheManager.getCache("test_tmp_redis_cache");
+	}
+
+	@AfterMethod
+	public void tearDown() {
+		redisCache.clear();
+		super.tearDown();
+	}
+
+	private void putAll() {
+		redisCache.put("1", "111111");
+		redisCache.put("2", "222222");
+		redisCache.put("3", "333333");
+	}
+
+	@Test
     public void testPut() {
-        String value1 = "111111";
-        String result1 = redisCache.put("1", value1);
-        assertEquals(result1, value1);
-        String value2 = "222222";
-        String result2 = redisCache.put("2", value2);
-        assertEquals(result2, value2);
-        String value3 = "333333";
-        String result3 = redisCache.put("3", value3);
-        assertEquals(result3, value3);
+        String value = "111111";
+        String result = redisCache.put("1", value);
+        assertEquals(result, value);
     }
 
-    @Test(priority = 2)
+    @Test
     public void testSize() {
+		putAll();
         assertEquals(redisCache.size(), 3);
     }
 
-    @Test(priority = 3)
+    @Test
     public void testGet() {
-        String resul1 = redisCache.get("1");
-        assertEquals(resul1, "111111");
-        String result2 = redisCache.get("2");
-        assertEquals(result2, "222222");
-        String result3 = redisCache.get("3");
-        assertEquals(result3, "333333");
+		putAll();
+        String result = redisCache.get("1");
+        assertEquals(result, "111111");
     }
 
-    @Test(priority = 4)
+    @Test
     public void testKeys() {
+		putAll();
         Set<String> set = redisCache.keys();
         assertEquals(set.size(), 3);
         assertTrue(set.contains("1"));
@@ -60,8 +73,9 @@ public class RedisCacheTest extends BaseTest {
         assertTrue(set.contains("3"));
     }
 
-    @Test(priority = 5)
+    @Test
     public void testValues() {
+		putAll();
         Collection<String> set = redisCache.values();
         assertEquals(set.size(), 3);
         assertTrue(set.contains("111111"));
@@ -69,14 +83,16 @@ public class RedisCacheTest extends BaseTest {
         assertTrue(set.contains("333333"));
     }
 
-    @Test(priority = 6)
+    @Test
     public void testRemove() {
+		putAll();
         redisCache.remove("1");
         assertEquals(redisCache.getCacheKeys().size(), 2);
     }
 
-    @Test(priority = 7)
+    @Test
     public void testClear() {
+		putAll();
         redisCache.clear();
         assertEquals(redisCache.getCacheKeys().size(), 0);
     }

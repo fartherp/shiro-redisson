@@ -5,6 +5,7 @@
 package com.github.fartherp.shiro;
 
 import org.apache.shiro.session.mgt.SimpleSession;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 /**
@@ -17,9 +18,16 @@ import org.testng.annotations.Test;
  */
 public class ClearCacheTest extends BaseTest {
 
-    private RedisSessionDAO redisSessionDAO = new RedisSessionDAO(redisCacheManager);
+    private RedisSessionDAO redisSessionDAO;
 
-    private ClearCache clearCache = new ClearCache(redisSessionDAO);
+    private ClearCache clearCache;
+
+	@BeforeMethod
+	public void setUp() {
+		super.setUp();
+		redisSessionDAO = new RedisSessionDAO(redisCacheManager);
+		clearCache = new ClearCache(redisSessionDAO);
+	}
 
     @Test
     public void testRun() throws Exception {
@@ -31,6 +39,7 @@ public class ClearCacheTest extends BaseTest {
         redisCacheManager.getCache("clearCache");
 
         Thread.sleep(1500);
-        clearCache.run(null);
+		clearCache.clearSession();
+		clearCache.clearCache();
     }
 }

@@ -9,6 +9,7 @@ import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 import org.redisson.client.codec.StringCodec;
 import org.redisson.config.Config;
+import org.testng.annotations.AfterMethod;
 
 import java.util.Date;
 
@@ -20,20 +21,27 @@ import java.util.Date;
  *  @project: risk-control-parent
  * </pre>
  */
-public class BaseTest {
+public abstract class BaseTest {
 
-    public final Config config = new Config();
+    public RedissonClient redissonClient;
 
-    public final RedissonClient redissonClient;
+    public RedisCacheManager redisCacheManager;
 
-    {
-        config.setCodec(new StringCodec()).useSingleServer().setAddress("redis://127.0.0.1:6379");
-        redissonClient = Redisson.create(config);
-    }
+	public void setUp() {
+		Config config = new Config();
+		config.setCodec(new StringCodec()).useSingleServer().setAddress("redis://127.0.0.1:6379");
+		redissonClient = Redisson.create(config);
+		redisCacheManager = new RedisCacheManager(redissonClient);
+	}
 
-    public final RedisCacheManager redisCacheManager = new RedisCacheManager(redissonClient);
+	@AfterMethod
+	public void tearDown() {
+		if (redissonClient != null && !redissonClient.isShutdown()) {
+			redissonClient.shutdown();
+		}
+	}
 
-    public SimpleSession generateSimpleSession() {
+	public SimpleSession generateSimpleSession() {
         SimpleSession simpleSession = new SimpleSession();
         simpleSession.setStartTimestamp(new Date());
         simpleSession.setLastAccessTime(new Date());

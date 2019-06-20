@@ -5,6 +5,7 @@
 package com.github.fartherp.shiro;
 
 import org.apache.shiro.cache.Cache;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import static com.github.fartherp.shiro.RedisCacheManager.MINUTE;
@@ -19,6 +20,11 @@ import static org.testng.Assert.*;
  * </pre>
  */
 public class RedisCacheManagerTest extends BaseTest {
+
+	@BeforeMethod
+	public void setUp() {
+		super.setUp();
+	}
 
     @Test
     public void testGetCache() {
