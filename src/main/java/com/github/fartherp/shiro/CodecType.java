@@ -8,6 +8,7 @@ import org.apache.shiro.util.ClassUtils;
 import org.redisson.client.codec.ByteArrayCodec;
 import org.redisson.client.codec.Codec;
 import org.redisson.client.codec.LongCodec;
+import org.redisson.codec.JsonJacksonCodec;
 
 import java.lang.reflect.Constructor;
 
@@ -54,7 +55,7 @@ public enum CodecType {
             Constructor constructor = ClassUtils.getConstructor(clazz, ClassLoader.class);
             return (Codec) ClassUtils.instantiate(constructor, this.getClass().getClassLoader());
         } catch (Throwable e) {
-            return null;
+            return new JsonJacksonCodec(this.getClass().getClassLoader());
         }
     }
 }
