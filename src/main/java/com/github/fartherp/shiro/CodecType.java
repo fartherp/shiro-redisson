@@ -4,13 +4,22 @@
 
 package com.github.fartherp.shiro;
 
-import org.apache.shiro.util.ClassUtils;
 import org.redisson.client.codec.ByteArrayCodec;
 import org.redisson.client.codec.Codec;
 import org.redisson.client.codec.LongCodec;
+import org.redisson.client.codec.StringCodec;
+import org.redisson.codec.AvroJacksonCodec;
+import org.redisson.codec.CborJacksonCodec;
+import org.redisson.codec.FstCodec;
+import org.redisson.codec.IonJacksonCodec;
 import org.redisson.codec.JsonJacksonCodec;
-
-import java.lang.reflect.Constructor;
+import org.redisson.codec.KryoCodec;
+import org.redisson.codec.LZ4Codec;
+import org.redisson.codec.MsgPackJacksonCodec;
+import org.redisson.codec.SerializationCodec;
+import org.redisson.codec.SmileJacksonCodec;
+import org.redisson.codec.SnappyCodec;
+import org.redisson.codec.SnappyCodecV2;
 
 /**
  * Created by IntelliJ IDEA.
@@ -18,44 +27,111 @@ import java.lang.reflect.Constructor;
  * Date: 2019/1/31
  */
 public enum CodecType {
-    FST_CODEC("org.redisson.codec.FstCodec", "default"),
-    JSON_JACKSON_CODEC("org.redisson.codec.JsonJacksonCodec", "default"),
-    SERIALIZATION_CODEC("org.redisson.codec.SerializationCodec", "default"),
-    SNAPPY_CODEC("org.redisson.codec.SnappyCodec", "default"),
-    SNAPPY_CODEC_V_2("org.redisson.codec.SnappyCodecV2", "default"),
-    STRING_CODEC("org.redisson.client.codec.StringCodec", "default"),
-    LONG_CODEC("org.redisson.client.codec.LongCodec", "default"),
-    BYTE_ARRAY_CODEC("org.redisson.client.codec.ByteArrayCodec", "default"),
+    FST_CODEC("default") {
+		@Override
+		public Codec getDefaultCodec(ClassLoader classLoader) {
+			return new FstCodec(classLoader);
+		}
+	},
+    JSON_JACKSON_CODEC("default") {
+		@Override
+		public Codec getDefaultCodec(ClassLoader classLoader) {
+			return new JsonJacksonCodec(classLoader);
+		}
+	},
+    SERIALIZATION_CODEC("default") {
+		@Override
+		public Codec getDefaultCodec(ClassLoader classLoader) {
+			return new SerializationCodec(classLoader);
+		}
+	},
+    SNAPPY_CODEC("default") {
+		@Override
+		public Codec getDefaultCodec(ClassLoader classLoader) {
+			return new SnappyCodec(classLoader);
+		}
+	},
+    SNAPPY_CODEC_V_2("default") {
+		@Override
+		public Codec getDefaultCodec(ClassLoader classLoader) {
+			return new SnappyCodecV2(classLoader);
+		}
+	},
+    STRING_CODEC("default") {
+		@Override
+		public Codec getDefaultCodec(ClassLoader classLoader) {
+			return new StringCodec(classLoader);
+		}
+	},
+    LONG_CODEC("default") {
+		@Override
+		public Codec getDefaultCodec(ClassLoader classLoader) {
+			return LongCodec.INSTANCE;
+		}
+	},
+    BYTE_ARRAY_CODEC("default") {
+		@Override
+		public Codec getDefaultCodec(ClassLoader classLoader) {
+			return ByteArrayCodec.INSTANCE;
+		}
+	},
 
-    AVRO_JACKSON_CODEC("org.redisson.codec.AvroJacksonCodec", "com.fasterxml.jackson.dataformat:jackson-dataformat-avro"),
-    SMILE_JACKSON_CODEC("org.redisson.codec.SmileJacksonCodec", "com.fasterxml.jackson.dataformat:jackson-dataformat-smile"),
-    CBOR_JACKSON_CODEC("org.redisson.codec.CborJacksonCodec", "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor"),
-    ION_JACKSON_CODEC("org.redisson.codec.IonJacksonCodec", "com.fasterxml.jackson.dataformat:jackson-dataformat-ion"),
-    KRYO_CODEC("org.redisson.codec.KryoCodec", "com.esotericsoftware:kryo"),
-    MSG_PACK_JACKSON_CODEC("org.redisson.codec.MsgPackJacksonCodec", "org.msgpack:jackson-dataformat-msgpack"),
-    LZ_4_CODEC("org.redisson.codec.LZ4Codec", "net.jpountz.lz4:lz4"),
-    ;
+    AVRO_JACKSON_CODEC("com.fasterxml.jackson.dataformat:jackson-dataformat-avro") {
+		@Override
+		public Codec getDefaultCodec(ClassLoader classLoader) {
+			return new AvroJacksonCodec(classLoader);
+		}
+	},
+    SMILE_JACKSON_CODEC("com.fasterxml.jackson.dataformat:jackson-dataformat-smile") {
+		@Override
+		public Codec getDefaultCodec(ClassLoader classLoader) {
+			return new SmileJacksonCodec(classLoader);
+		}
+	},
+    CBOR_JACKSON_CODEC("com.fasterxml.jackson.dataformat:jackson-dataformat-cbor") {
+		@Override
+		public Codec getDefaultCodec(ClassLoader classLoader) {
+			return new CborJacksonCodec(classLoader);
+		}
+	},
+    ION_JACKSON_CODEC("com.fasterxml.jackson.dataformat:jackson-dataformat-ion") {
+		@Override
+		public Codec getDefaultCodec(ClassLoader classLoader) {
+			return new IonJacksonCodec(classLoader);
+		}
+	},
+    KRYO_CODEC("com.esotericsoftware:kryo") {
+		@Override
+		public Codec getDefaultCodec(ClassLoader classLoader) {
+			return new KryoCodec(classLoader);
+		}
+	},
+    MSG_PACK_JACKSON_CODEC("org.msgpack:jackson-dataformat-msgpack") {
+		@Override
+		public Codec getDefaultCodec(ClassLoader classLoader) {
+			return new MsgPackJacksonCodec(classLoader);
+		}
+	},
+    LZ_4_CODEC("net.jpountz.lz4:lz4") {
+		@Override
+		public Codec getDefaultCodec(ClassLoader classLoader) {
+			return new LZ4Codec(classLoader);
+		}
+	};
 
-    public String className;
     public String dependencyPackageName;
 
-    CodecType(String className, String dependencyPackageName) {
-        this.className = className;
+    CodecType(String dependencyPackageName) {
         this.dependencyPackageName = dependencyPackageName;
     }
 
     public Codec getCodec() {
         try {
-            if ("org.redisson.client.codec.LongCodec".equals(this.className)) {
-                return LongCodec.INSTANCE;
-            } else if  ("org.redisson.client.codec.ByteArrayCodec".equals(this.className)) {
-                return ByteArrayCodec.INSTANCE;
-            }
-            Class clazz = ClassUtils.forName(this.className);
-            Constructor constructor = ClassUtils.getConstructor(clazz, ClassLoader.class);
-            return (Codec) ClassUtils.instantiate(constructor, this.getClass().getClassLoader());
+            return getDefaultCodec(this.getClass().getClassLoader());
         } catch (Throwable e) {
-            return new JsonJacksonCodec(this.getClass().getClassLoader());
+            return JSON_JACKSON_CODEC.getCodec();
         }
     }
+
+    public abstract Codec getDefaultCodec(ClassLoader classLoader);
 }
