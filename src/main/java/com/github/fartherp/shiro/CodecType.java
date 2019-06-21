@@ -29,92 +29,92 @@ import org.redisson.codec.SnappyCodecV2;
 public enum CodecType {
     FST_CODEC("default") {
 		@Override
-		public Codec getDefaultCodec(ClassLoader classLoader) {
+		public Codec getCodec(ClassLoader classLoader) {
 			return new FstCodec(classLoader);
 		}
 	},
     JSON_JACKSON_CODEC("default") {
 		@Override
-		public Codec getDefaultCodec(ClassLoader classLoader) {
+		public Codec getCodec(ClassLoader classLoader) {
 			return new JsonJacksonCodec(classLoader);
 		}
 	},
     SERIALIZATION_CODEC("default") {
 		@Override
-		public Codec getDefaultCodec(ClassLoader classLoader) {
+		public Codec getCodec(ClassLoader classLoader) {
 			return new SerializationCodec(classLoader);
 		}
 	},
     SNAPPY_CODEC("default") {
 		@Override
-		public Codec getDefaultCodec(ClassLoader classLoader) {
+		public Codec getCodec(ClassLoader classLoader) {
 			return new SnappyCodec(classLoader);
 		}
 	},
     SNAPPY_CODEC_V_2("default") {
 		@Override
-		public Codec getDefaultCodec(ClassLoader classLoader) {
+		public Codec getCodec(ClassLoader classLoader) {
 			return new SnappyCodecV2(classLoader);
 		}
 	},
     STRING_CODEC("default") {
 		@Override
-		public Codec getDefaultCodec(ClassLoader classLoader) {
+		public Codec getCodec(ClassLoader classLoader) {
 			return new StringCodec(classLoader);
 		}
 	},
     LONG_CODEC("default") {
 		@Override
-		public Codec getDefaultCodec(ClassLoader classLoader) {
+		public Codec getCodec(ClassLoader classLoader) {
 			return LongCodec.INSTANCE;
 		}
 	},
     BYTE_ARRAY_CODEC("default") {
 		@Override
-		public Codec getDefaultCodec(ClassLoader classLoader) {
+		public Codec getCodec(ClassLoader classLoader) {
 			return ByteArrayCodec.INSTANCE;
 		}
 	},
 
     AVRO_JACKSON_CODEC("com.fasterxml.jackson.dataformat:jackson-dataformat-avro") {
 		@Override
-		public Codec getDefaultCodec(ClassLoader classLoader) {
+		public Codec getCodec(ClassLoader classLoader) {
 			return new AvroJacksonCodec(classLoader);
 		}
 	},
     SMILE_JACKSON_CODEC("com.fasterxml.jackson.dataformat:jackson-dataformat-smile") {
 		@Override
-		public Codec getDefaultCodec(ClassLoader classLoader) {
+		public Codec getCodec(ClassLoader classLoader) {
 			return new SmileJacksonCodec(classLoader);
 		}
 	},
     CBOR_JACKSON_CODEC("com.fasterxml.jackson.dataformat:jackson-dataformat-cbor") {
 		@Override
-		public Codec getDefaultCodec(ClassLoader classLoader) {
+		public Codec getCodec(ClassLoader classLoader) {
 			return new CborJacksonCodec(classLoader);
 		}
 	},
     ION_JACKSON_CODEC("com.fasterxml.jackson.dataformat:jackson-dataformat-ion") {
 		@Override
-		public Codec getDefaultCodec(ClassLoader classLoader) {
+		public Codec getCodec(ClassLoader classLoader) {
 			return new IonJacksonCodec(classLoader);
 		}
 	},
     KRYO_CODEC("com.esotericsoftware:kryo") {
 		@Override
-		public Codec getDefaultCodec(ClassLoader classLoader) {
+		public Codec getCodec(ClassLoader classLoader) {
 			return new KryoCodec(classLoader);
 		}
 	},
     MSG_PACK_JACKSON_CODEC("org.msgpack:jackson-dataformat-msgpack") {
 		@Override
-		public Codec getDefaultCodec(ClassLoader classLoader) {
+		public Codec getCodec(ClassLoader classLoader) {
 			return new MsgPackJacksonCodec(classLoader);
 		}
 	},
     LZ_4_CODEC("net.jpountz.lz4:lz4") {
 		@Override
-		public Codec getDefaultCodec(ClassLoader classLoader) {
+		public Codec getCodec(ClassLoader classLoader) {
 			return new LZ4Codec(classLoader);
 		}
 	};
@@ -127,11 +127,11 @@ public enum CodecType {
 
     public Codec getCodec() {
         try {
-            return getDefaultCodec(this.getClass().getClassLoader());
+            return getCodec(this.getClass().getClassLoader());
         } catch (Throwable e) {
             return JSON_JACKSON_CODEC.getCodec();
         }
     }
 
-    public abstract Codec getDefaultCodec(ClassLoader classLoader);
+    public abstract Codec getCodec(ClassLoader classLoader);
 }
