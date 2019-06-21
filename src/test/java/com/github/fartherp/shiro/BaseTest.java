@@ -49,6 +49,7 @@ public abstract class BaseTest {
         simpleSession.setHost("127.0.0.1");
         simpleSession.setStopTimestamp(new Date());
         simpleSession.setExpired(true);
+		simpleSession.setAttribute("simpleSession", "simpleSession");
         return simpleSession;
     }
 }

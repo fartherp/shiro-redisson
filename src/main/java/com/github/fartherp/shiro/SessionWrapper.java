@@ -34,27 +34,27 @@ public class SessionWrapper implements Serializable {
 
     public Session getSession() {
         SimpleSession simpleSession = new SimpleSession();
-        simpleSession.setId(this.id);
-        simpleSession.setStartTimestamp(this.startTimestamp);
-        simpleSession.setStopTimestamp(this.stopTimestamp);
-        simpleSession.setLastAccessTime(this.lastAccessTime);
-        simpleSession.setTimeout(this.timeout);
-        simpleSession.setExpired(this.expired);
-        simpleSession.setHost(this.host);
-        simpleSession.setAttributes(attributes);
+        simpleSession.setId(this.getId());
+        simpleSession.setStartTimestamp(this.getStartTimestamp());
+        simpleSession.setStopTimestamp(this.getStopTimestamp());
+        simpleSession.setLastAccessTime(this.getLastAccessTime());
+        simpleSession.setTimeout(this.getTimeout());
+        simpleSession.setExpired(this.isExpired());
+        simpleSession.setHost(this.getHost());
+        simpleSession.setAttributes(this.getAttributes());
         return simpleSession;
     }
 
     public void setSession(Session session) {
-        this.id = session.getId();
-        this.startTimestamp = session.getStartTimestamp();
-        this.lastAccessTime = session.getLastAccessTime();
-        this.timeout = session.getTimeout();
-        this.host = session.getHost();
+        this.setId(session.getId());
+        this.setStartTimestamp(session.getStartTimestamp());
+        this.setLastAccessTime(session.getLastAccessTime());
+        this.setTimeout(session.getTimeout());
+        this.setHost(session.getHost());
         if (session instanceof SimpleSession) {
-            this.stopTimestamp = ((SimpleSession) session).getStopTimestamp();
-            this.expired = ((SimpleSession) session).isExpired();
-            this.attributes = ((SimpleSession) session).getAttributes();
+            this.setStopTimestamp(((SimpleSession) session).getStopTimestamp());
+            this.setExpired(((SimpleSession) session).isExpired());
+            this.setAttributes(((SimpleSession) session).getAttributes());
         }
     }
 
