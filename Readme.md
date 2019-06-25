@@ -2,6 +2,7 @@
 [![Build Status](https://travis-ci.org/fartherp/shiro-redisson.svg?branch=master)](https://travis-ci.org/fartherp/shiro-redisson)
 [![Coverage Status](https://coveralls.io/repos/github/fartherp/shiro-redisson/badge.svg?branch=master)](https://coveralls.io/github/fartherp/shiro-redisson?branch=master)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.fartherp/shiro-redisson/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.fartherp/shiro-redisson/)
+[![Sonatype Nexus (Snapshots)](https://img.shields.io/nexus/s/https/oss.sonatype.org/com.github.fartherp/shiro-redisson.svg)](https://oss.sonatype.org/content/repositories/snapshots/com/github/fartherp/shiro-redisson)
 [![GitHub release](https://img.shields.io/github/release/fartherp/shiro-redisson.svg)](https://github.com/fartherp/shiro-redisson/releases)
 [![License](https://img.shields.io/badge/license-Apache%202-4EB1BA.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
 [![Project Stats](https://www.openhub.net/p/shiro-redisson/widgets/project_thin_badge.gif)](https://www.openhub.net/p/shiro-redisson)
@@ -16,22 +17,6 @@
 ```
 ## JDK
 > 1.8
-
-## 如何使用？
-1. 在项目中加入```shiro-redisson```依赖
-
-    ```Maven```
-    ``` xml
-    <dependency>
-        <groupId>com.github.fartherp</groupId>
-        <artifactId>shiro-redisson</artifactId>
-        <version>1.1.1</version>
-    </dependency>
-    ```
-    ```Gradle```
-    ```
-    compile 'com.github.fartherp:shiro-redisson:1.1.1'
-    ```
 
 ## java使用
 ``` java
