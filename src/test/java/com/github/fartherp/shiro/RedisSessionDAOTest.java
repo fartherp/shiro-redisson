@@ -73,6 +73,12 @@ public class RedisSessionDAOTest extends BaseTest {
         assertNull(session);
     }
 
+	@Test
+	public void testRedisNullDoReadSession() {
+		SimpleSession session = (SimpleSession) redisSessionDAO.doReadSession("11111");
+		assertNull(session);
+	}
+
     @Test
     public void testRepeatDoReadSession() {
         SimpleSession simpleSession = generateSimpleSession();

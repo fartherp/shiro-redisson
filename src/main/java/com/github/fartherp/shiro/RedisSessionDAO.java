@@ -164,6 +164,9 @@ public class RedisSessionDAO extends AbstractSessionDAO {
     }
 
     private void setSessionToThreadLocal(Serializable sessionId, Session s) {
+    	if (s == null) {
+    		return;
+		}
         Map<Serializable, SessionWrapper> sessionMap = sessionsInThread.get();
         if (sessionMap == null) {
             sessionMap = new HashMap<>();
