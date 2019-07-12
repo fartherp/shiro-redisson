@@ -6,6 +6,7 @@ package com.github.fartherp.shiro;
 
 /**
  * Created by IntelliJ IDEA.
+ *
  * @author CK
  * @date 2019/1/14
  */

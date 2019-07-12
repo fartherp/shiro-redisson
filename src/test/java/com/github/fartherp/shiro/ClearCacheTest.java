@@ -13,12 +13,10 @@ import static com.github.fartherp.shiro.Constant.DEFAULT_PRINCIPAL_ID_FIELD_NAME
 import static com.github.fartherp.shiro.Constant.DEFAULT_REDISSON_LRU_OBJ_CAPACITY;
 
 /**
- * <pre>
- *  @author: cuiyuqiang
- *  @email: cuiyuqiang@ddjf.com.cn
- *  @date: 2019/6/19 15:25
- *  @project: risk-control-parent
- * </pre>
+ * Created by IntelliJ IDEA.
+ *
+ * @author CK
+ * @date 2019/6/19
  */
 public class ClearCacheTest extends BaseTest {
 

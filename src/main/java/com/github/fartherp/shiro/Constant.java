@@ -7,7 +7,7 @@ package com.github.fartherp.shiro;
 /**
  * Created by IntelliJ IDEA.
  *
- * @author cuiyuqiang
+ * @author CK
  * @date 2019/7/11
  */
 public interface Constant {

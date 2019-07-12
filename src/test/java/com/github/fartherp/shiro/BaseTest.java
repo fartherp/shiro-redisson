@@ -16,12 +16,10 @@ import java.util.Date;
 import static com.github.fartherp.shiro.Constant.THIRTY_MINUTES;
 
 /**
- * <pre>
- *  @author: cuiyuqiang
- *  @email: cuiyuqiang@ddjf.com.cn
- *  @date: 2019/6/19 10:30
- *  @project: risk-control-parent
- * </pre>
+ * Created by IntelliJ IDEA.
+ *
+ * @author CK
+ * @date 2019/6/19
  */
 public abstract class BaseTest {
 

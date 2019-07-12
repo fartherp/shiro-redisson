@@ -18,12 +18,10 @@ import static com.github.fartherp.shiro.Constant.DEFAULT_SESSION_KEY_PREFIX;
 import static org.testng.Assert.*;
 
 /**
- * <pre>
- *  @author: cuiyuqiang
- *  @email: cuiyuqiang@ddjf.com.cn
- *  @date: 2019/6/19 14:10
- *  @project: risk-control-parent
- * </pre>
+ * Created by IntelliJ IDEA.
+ *
+ * @author CK
+ * @date 2019/6/19
  */
 public class RedisSessionDAOTest extends BaseTest {
 

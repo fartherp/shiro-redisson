@@ -25,12 +25,10 @@ import org.testng.annotations.Test;
 import static org.testng.Assert.*;
 
 /**
- * <pre>
- *  @author: cuiyuqiang
- *  @email: cuiyuqiang@ddjf.com.cn
- *  @date: 2019/6/18 17:25
- *  @project: risk-control-parent
- * </pre>
+ * Created by IntelliJ IDEA.
+ *
+ * author CK
+ * date 2019/6/18
  */
 public class CodecTypeTest {
 

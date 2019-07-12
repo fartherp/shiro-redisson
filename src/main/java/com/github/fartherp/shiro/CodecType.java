@@ -23,6 +23,7 @@ import org.redisson.codec.SnappyCodecV2;
 
 /**
  * Created by IntelliJ IDEA.
+ *
  * @author CK
  * @date 2019/1/31
  */

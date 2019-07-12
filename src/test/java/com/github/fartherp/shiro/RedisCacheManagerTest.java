@@ -14,12 +14,10 @@ import static com.github.fartherp.shiro.Constant.THIRTY_MINUTES;
 import static org.testng.Assert.*;
 
 /**
- * <pre>
- *  @author: cuiyuqiang
- *  @email: cuiyuqiang@ddjf.com.cn
- *  @date: 2019/6/19 9:38
- *  @project: risk-control-parent
- * </pre>
+ * Created by IntelliJ IDEA.
+ *
+ * @author CK
+ * @date 2019/6/19
  */
 public class RedisCacheManagerTest extends BaseTest {
 

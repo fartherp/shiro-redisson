@@ -10,6 +10,7 @@ import java.util.function.Function;
 
 /**
  * Created by IntelliJ IDEA.
+ *
  * @author CK
  * @date 2019/1/25
  */
