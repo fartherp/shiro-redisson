@@ -143,6 +143,10 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
                     </plugin>
+					<plugin>
+						<groupId>com.mycila</groupId>
+						<artifactId>license-maven-plugin</artifactId>
+					</plugin>
                 </plugins>
                 <resources>
                     <resource>
@@ -157,22 +161,6 @@
                 </resources>
             </build>
         </profile>
-		<profile>
-			<id>license</id>
-			<activation>
-				<file>
-					<exists>${project.basedir}/license.txt</exists>
-				</file>
-			</activation>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>com.mycila</groupId>
-						<artifactId>license-maven-plugin</artifactId>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
     </profiles>
     <build>
         <pluginManagement>
@@ -277,6 +265,7 @@
 					<version>3.0</version>
 					<configuration>
 						<header>${project.basedir}/license.txt</header>
+						<failIfMissing>true</failIfMissing>
 						<excludes>
 							<exclude>**/*maven-wrapper.properties</exclude>
 							<exclude>**/*MavenWrapperDownloader.java</exclude>
@@ -294,7 +283,7 @@
 						<execution>
 							<phase>compile</phase>
 							<goals>
-								<goal>format</goal>
+								<goal>check</goal>
 							</goals>
 						</execution>
 					</executions>
