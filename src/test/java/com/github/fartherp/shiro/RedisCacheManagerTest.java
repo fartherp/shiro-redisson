@@ -36,11 +36,6 @@ public class RedisCacheManagerTest extends BaseTest {
     }
 
     @Test
-    public void testGetKeyPrefix() {
-        assertEquals(redisCacheManager.getKeyPrefix(), DEFAULT_CACHE_KEY_PREFIX);
-    }
-
-    @Test
     public void testGetRedissonClient() {
         assertNotNull(redisCacheManager.getRedissonClient());
     }

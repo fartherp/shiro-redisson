@@ -27,8 +27,8 @@ import static org.testng.Assert.*;
 /**
  * Created by IntelliJ IDEA.
  *
- * author CK
- * date 2019/6/18
+ * @author CK
+ * @date 2019/6/18
  */
 public class CodecTypeTest {
 

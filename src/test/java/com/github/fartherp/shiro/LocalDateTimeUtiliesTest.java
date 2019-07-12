@@ -11,8 +11,8 @@ import static org.testng.Assert.*;
 /**
  * Created by IntelliJ IDEA.
  *
- * Author: CK
- * Date: 2019/1/25
+ * @author CK
+ * @date 2019/1/25
  */
 public class LocalDateTimeUtiliesTest {
 

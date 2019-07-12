@@ -13,6 +13,7 @@ import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.util.StringUtils;
 import org.redisson.api.RBucket;
 import org.redisson.api.RScoredSortedSet;
+import org.redisson.client.codec.Codec;
 import org.redisson.client.protocol.ScoredEntry;
 
 import java.lang.reflect.InvocationTargetException;
@@ -36,25 +37,18 @@ import java.util.stream.Collectors;
  */
 public class RedisCache<K, V> implements Cache<K, V> {
 
-    private final long ttl;
-
     private final RedisCacheManager redisCacheManager;
 
     private final String cacheKeyPrefix;
-
-    private final String principalIdFieldName;
 
     private final RScoredSortedSet<K> cacheKeys;
 
 	private final Map<String, Object> lruMap;
 
-    public RedisCache(RedisCacheManager redisCacheManager, String keyPrefix, String principalIdFieldName,
-					  long ttl, int cacheLruSize) {
+    public RedisCache(RedisCacheManager redisCacheManager, String keyPrefix, int cacheLruSize, Codec cacheKeysCodec) {
         this.redisCacheManager = redisCacheManager;
         this.cacheKeyPrefix = keyPrefix;
-        this.principalIdFieldName = principalIdFieldName;
-        this.ttl = ttl;
-        this.cacheKeys = redisCacheManager.getRedissonClient().getScoredSortedSet(this.cacheKeyPrefix);
+        this.cacheKeys = redisCacheManager.getRedissonClient().getScoredSortedSet(this.cacheKeyPrefix, cacheKeysCodec);
 		this.lruMap = new LinkedHashMap<String, Object>(cacheLruSize, 0.75F, true) {
 			private static final long serialVersionUID = 8936289417496258606L;
 
@@ -89,11 +83,11 @@ public class RedisCache<K, V> implements Cache<K, V> {
         try {
             Object idObj = pincipalIdGetter.invoke(principalObject);
             if (idObj == null) {
-                throw new PrincipalIdNullException(principalObject.getClass(), this.principalIdFieldName);
+                throw new PrincipalIdNullException(principalObject.getClass(), redisCacheManager.getPrincipalIdFieldName());
             }
             redisKey = idObj.toString();
         } catch (IllegalAccessException | InvocationTargetException e) {
-            throw new PrincipalInstanceException(principalObject.getClass(), this.principalIdFieldName, e);
+            throw new PrincipalInstanceException(principalObject.getClass(), redisCacheManager.getPrincipalIdFieldName(), e);
         }
         return redisKey;
     }
@@ -104,16 +98,17 @@ public class RedisCache<K, V> implements Cache<K, V> {
         try {
             pincipalIdGetter = principalObject.getClass().getMethod(principalIdMethodName);
         } catch (NoSuchMethodException e) {
-            throw new PrincipalInstanceException(principalObject.getClass(), this.principalIdFieldName);
+            throw new PrincipalInstanceException(principalObject.getClass(), redisCacheManager.getPrincipalIdFieldName());
         }
         return pincipalIdGetter;
     }
 
     private String getPrincipalIdMethodName() {
-        if (!StringUtils.hasText(this.principalIdFieldName)) {
+    	String principalIdFieldName = redisCacheManager.getPrincipalIdFieldName();
+        if (!StringUtils.hasText(principalIdFieldName)) {
             throw new CacheManagerPrincipalIdNotAssignedException();
         }
-        return "get" + this.principalIdFieldName.substring(0, 1).toUpperCase() + this.principalIdFieldName.substring(1);
+        return "get" + principalIdFieldName.substring(0, 1).toUpperCase() + principalIdFieldName.substring(1);
     }
 
 	@SuppressWarnings("unchecked")
@@ -122,7 +117,7 @@ public class RedisCache<K, V> implements Cache<K, V> {
 	}
 
 	private RBucket<V> getBucket(K key) {
-		return convertLruMap(getRedisCacheKey(key), k -> redisCacheManager.getRedissonClient().getBucket(k));
+		return convertLruMap(getRedisCacheKey(key), k -> redisCacheManager.getRedissonClient().getBucket(k, redisCacheManager.getCacheCodec()));
 	}
 
     public V get(K key) throws CacheException {
@@ -132,6 +127,7 @@ public class RedisCache<K, V> implements Cache<K, V> {
 
     public V put(K key, V value) throws CacheException {
         RBucket<V> v = getBucket(key);
+        long ttl = redisCacheManager.getTtl();
         v.set(value, ttl, TimeUnit.SECONDS);
 
         cacheKeys.add(LocalDateTimeUtilies.getTimestamp(o -> o.plusSeconds(ttl)), key);

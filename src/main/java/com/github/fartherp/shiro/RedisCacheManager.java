@@ -10,10 +10,12 @@ import org.apache.shiro.cache.CacheManager;
 import org.apache.shiro.util.Assert;
 import org.apache.shiro.util.StringUtils;
 import org.redisson.api.RedissonClient;
+import org.redisson.client.codec.Codec;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import static com.github.fartherp.shiro.CodecType.FST_CODEC;
 import static com.github.fartherp.shiro.Constant.DEFAULT_CACHE_KEY_PREFIX;
 import static com.github.fartherp.shiro.Constant.DEFAULT_PRINCIPAL_ID_FIELD_NAME;
 import static com.github.fartherp.shiro.Constant.DEFAULT_REDISSON_LRU_OBJ_CAPACITY;
@@ -37,20 +39,26 @@ public class RedisCacheManager implements CacheManager {
 
     private final int cacheLruSize;
 
+    private final Codec cacheCodec;
+
+    private final Codec cacheKeysCodec;
+
     private final RedissonClient redissonClient;
 
     public RedisCacheManager(RedissonClient redissonClient) {
         this(redissonClient, DEFAULT_CACHE_KEY_PREFIX, DEFAULT_PRINCIPAL_ID_FIELD_NAME,
-			THIRTY_MINUTES, DEFAULT_REDISSON_LRU_OBJ_CAPACITY);
+			THIRTY_MINUTES, DEFAULT_REDISSON_LRU_OBJ_CAPACITY, FST_CODEC, FST_CODEC);
     }
 
     public RedisCacheManager(RedissonClient redissonClient, String keyPrefix, String principalIdFieldName,
-							 long ttl, int cacheLruSize) {
+							 long ttl, int cacheLruSize, CodecType cacheCodecType, CodecType cacheKeysCodecType) {
         this.redissonClient = redissonClient;
         this.keyPrefix = StringUtils.hasText(keyPrefix) ? keyPrefix : DEFAULT_CACHE_KEY_PREFIX;
         this.principalIdFieldName = StringUtils.hasText(principalIdFieldName) ? principalIdFieldName : DEFAULT_PRINCIPAL_ID_FIELD_NAME;
         this.ttl = ttl > 0 ? ttl : THIRTY_MINUTES;
         this.cacheLruSize = cacheLruSize > 0 ? cacheLruSize : DEFAULT_REDISSON_LRU_OBJ_CAPACITY;
+        this.cacheCodec = cacheCodecType != null ? cacheCodecType.getCodec() : FST_CODEC.getCodec();
+        this.cacheKeysCodec = cacheKeysCodecType != null ? cacheKeysCodecType.getCodec() : FST_CODEC.getCodec();
     }
 
     @SuppressWarnings("all")
@@ -58,8 +66,7 @@ public class RedisCacheManager implements CacheManager {
         Assert.notNull(redissonClient, "RedissonClient is no null");
         Cache cache = caches.get(name);
         if (cache == null) {
-            cache = new RedisCache<K, V>(this, keyPrefix + name, principalIdFieldName,
-				ttl, cacheLruSize);
+            cache = new RedisCache<K, V>(this, keyPrefix + name, cacheLruSize, cacheKeysCodec);
             caches.put(name, cache);
         }
         return cache;
@@ -69,10 +76,6 @@ public class RedisCacheManager implements CacheManager {
 		return caches;
 	}
 
-    public String getKeyPrefix() {
-        return keyPrefix;
-    }
-
 	public String getPrincipalIdFieldName() {
 		return principalIdFieldName;
 	}
@@ -80,6 +83,10 @@ public class RedisCacheManager implements CacheManager {
     public long getTtl() {
         return ttl;
     }
+
+	public Codec getCacheCodec() {
+		return cacheCodec;
+	}
 
 	public RedissonClient getRedissonClient() {
 		return redissonClient;
