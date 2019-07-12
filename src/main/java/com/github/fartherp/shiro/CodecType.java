@@ -133,5 +133,5 @@ public enum CodecType {
         }
     }
 
-    public abstract Codec getCodec(ClassLoader classLoader);
+    protected abstract Codec getCodec(ClassLoader classLoader);
 }
