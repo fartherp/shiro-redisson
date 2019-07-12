@@ -66,19 +66,20 @@ public class RedisSessionDAO extends AbstractSessionDAO {
 	private final Map<String, Object> lruMap;
 
 	public RedisSessionDAO(RedisCacheManager redisCacheManager) {
-		this(redisCacheManager, DEFAULT_SESSION_KEY_PREFIX, ExpireType.DEFAULT_EXPIRE.type,
+		this(redisCacheManager, DEFAULT_SESSION_KEY_PREFIX, ExpireType.DEFAULT_EXPIRE,
 			DEFAULT_SESSION_IN_MEMORY_ENABLED, DEFAULT_SESSION_IN_MEMORY_TIMEOUT,
-			CodecType.FST_CODEC.getCodec(), DEFAULT_REDISSON_LRU_OBJ_CAPACITY);
+			CodecType.FST_CODEC, DEFAULT_REDISSON_LRU_OBJ_CAPACITY);
 	}
 
-    public RedisSessionDAO(RedisCacheManager redisCacheManager, String sessionKeyPrefix, int expire,
-						   boolean sessionInMemoryEnabled, long sessionInMemoryTimeout, Codec codec, int sessionLruSize) {
+    public RedisSessionDAO(RedisCacheManager redisCacheManager, String sessionKeyPrefix, ExpireType expireType,
+						   boolean sessionInMemoryEnabled, long sessionInMemoryTimeout, CodecType codecType,
+						   int sessionLruSize) {
         this.redisCacheManager = redisCacheManager;
         this.sessionKeyPrefix = StringUtils.hasText(sessionKeyPrefix) ? sessionKeyPrefix : DEFAULT_SESSION_KEY_PREFIX;
-        this.expire = expire > 0 ? expire : ExpireType.DEFAULT_EXPIRE.type;
+        this.expire = expireType != null ? expireType.type : ExpireType.DEFAULT_EXPIRE.type;
         this.sessionInMemoryEnabled = sessionInMemoryEnabled;
         this.sessionInMemoryTimeout = sessionInMemoryTimeout > 0 ? sessionInMemoryTimeout : DEFAULT_SESSION_IN_MEMORY_TIMEOUT;
-        this.codec = codec != null ? codec : CodecType.FST_CODEC.getCodec();
+        this.codec = codecType != null ? codecType.getCodec() : CodecType.FST_CODEC.getCodec();
 		int tmpSessionLruSize = sessionLruSize > 0 ? sessionLruSize : DEFAULT_REDISSON_LRU_OBJ_CAPACITY;
 		this.lruMap = new LinkedHashMap<String, Object>(tmpSessionLruSize, 0.75F, true) {
 			private static final long serialVersionUID = -7936195607152909097L;
