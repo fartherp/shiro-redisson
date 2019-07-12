@@ -230,7 +230,7 @@
                     <version>0.8.2</version>
 					<configuration>
 						<excludes>
-							<exclude>com.github.fartherp.shiro.exception.*</exclude>
+							<exclude>**/com/github/fartherp/shiro/exception/*</exclude>
 						</excludes>
 					</configuration>
                     <executions>
