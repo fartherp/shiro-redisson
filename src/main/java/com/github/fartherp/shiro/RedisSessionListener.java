@@ -17,16 +17,16 @@ import java.util.List;
 /**
  * Created by IntelliJ IDEA.
  *
- * @author: CK
- * @date: 2019/1/4
+ * @author CK
+ * @date 2019/1/4
  */
 public class RedisSessionListener implements SessionListener {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RedisSessionListener.class);
 
-    private SessionDAO sessionDAO;
+    private final SessionDAO sessionDAO;
 
-    private List<CachingRealm> cachingRealms;
+    private final List<CachingRealm> cachingRealms;
 
     public RedisSessionListener(SessionDAO sessionDAO, List<CachingRealm> cachingRealms) {
         this.sessionDAO = sessionDAO;

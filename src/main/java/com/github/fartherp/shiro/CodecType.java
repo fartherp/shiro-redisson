@@ -23,8 +23,8 @@ import org.redisson.codec.SnappyCodecV2;
 
 /**
  * Created by IntelliJ IDEA.
- * Author: CK
- * Date: 2019/1/31
+ * @author CK
+ * @date 2019/1/31
  */
 public enum CodecType {
     FST_CODEC("default") {

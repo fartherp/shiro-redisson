@@ -14,29 +14,43 @@ import org.redisson.api.RedissonClient;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import static com.github.fartherp.shiro.Constant.DEFAULT_CACHE_KEY_PREFIX;
+import static com.github.fartherp.shiro.Constant.DEFAULT_PRINCIPAL_ID_FIELD_NAME;
+import static com.github.fartherp.shiro.Constant.DEFAULT_REDISSON_LRU_OBJ_CAPACITY;
+import static com.github.fartherp.shiro.Constant.THIRTY_MINUTES;
+
 /**
  * Created by IntelliJ IDEA.
  *
- * @author: CK
- * @date: 2019/1/1
+ * @author CK
+ * @date 2019/1/1
  */
 public class RedisCacheManager implements CacheManager {
 
     private final ConcurrentMap<String, Cache> caches = new ConcurrentHashMap<>();
 
-    public static final String DEFAULT_CACHE_KEY_PREFIX = "shiro:cache:";
-    private String keyPrefix = DEFAULT_CACHE_KEY_PREFIX;
-    public static final String DEFAULT_PRINCIPAL_ID_FIELD_NAME = "id";
-    private String principalIdFieldName = DEFAULT_PRINCIPAL_ID_FIELD_NAME;
+    private final String keyPrefix;
 
-    public final static long MINUTE = 1000 * 60;
+    private final String principalIdFieldName;
 
-    private long ttl = 30 * MINUTE;
+    private final long ttl;
 
-    private RedissonClient redissonClient;
+    private final int cacheLruSize;
+
+    private final RedissonClient redissonClient;
 
     public RedisCacheManager(RedissonClient redissonClient) {
+        this(redissonClient, DEFAULT_CACHE_KEY_PREFIX, DEFAULT_PRINCIPAL_ID_FIELD_NAME,
+			THIRTY_MINUTES, DEFAULT_REDISSON_LRU_OBJ_CAPACITY);
+    }
+
+    public RedisCacheManager(RedissonClient redissonClient, String keyPrefix, String principalIdFieldName,
+							 long ttl, int cacheLruSize) {
         this.redissonClient = redissonClient;
+        this.keyPrefix = StringUtils.hasText(keyPrefix) ? keyPrefix : DEFAULT_CACHE_KEY_PREFIX;
+        this.principalIdFieldName = StringUtils.hasText(principalIdFieldName) ? principalIdFieldName : DEFAULT_PRINCIPAL_ID_FIELD_NAME;
+        this.ttl = ttl > 0 ? ttl : THIRTY_MINUTES;
+        this.cacheLruSize = cacheLruSize > 0 ? cacheLruSize : DEFAULT_REDISSON_LRU_OBJ_CAPACITY;
     }
 
     @SuppressWarnings("all")
@@ -44,47 +58,30 @@ public class RedisCacheManager implements CacheManager {
         Assert.notNull(redissonClient, "RedissonClient is no null");
         Cache cache = caches.get(name);
         if (cache == null) {
-            cache = new RedisCache<K, V>(this, keyPrefix + name, principalIdFieldName, ttl);
+            cache = new RedisCache<K, V>(this, keyPrefix + name, principalIdFieldName,
+				ttl, cacheLruSize);
             caches.put(name, cache);
         }
         return cache;
     }
 
+	public ConcurrentMap<String, Cache> getCaches() {
+		return caches;
+	}
+
     public String getKeyPrefix() {
         return keyPrefix;
     }
 
-    public void setKeyPrefix(String keyPrefix) {
-        if (StringUtils.hasText(keyPrefix)) {
-            this.keyPrefix = keyPrefix;
-        }
-    }
-
-    public RedissonClient getRedissonClient() {
-        return redissonClient;
-    }
+	public String getPrincipalIdFieldName() {
+		return principalIdFieldName;
+	}
 
     public long getTtl() {
         return ttl;
     }
 
-    public void setTtl(long ttl) {
-        if (ttl > 0) {
-            this.ttl = ttl;
-        }
-    }
-
-    public String getPrincipalIdFieldName() {
-        return principalIdFieldName;
-    }
-
-    public void setPrincipalIdFieldName(String principalIdFieldName) {
-        if (StringUtils.hasText(principalIdFieldName)) {
-            this.principalIdFieldName = principalIdFieldName;
-        }
-    }
-
-    public ConcurrentMap<String, Cache> getCaches() {
-        return caches;
-    }
+	public RedissonClient getRedissonClient() {
+		return redissonClient;
+	}
 }

@@ -20,13 +20,13 @@ import java.util.stream.Collectors;
 /**
  * Created by IntelliJ IDEA.
  *
- * @author: CK
- * @date: 2019/1/4
+ * @author CK
+ * @date 2019/1/4
  */
 public class ClearCache implements TimerTask {
-    private HashedWheelTimer hashedWheelTimer = new HashedWheelTimer();
+    private final HashedWheelTimer hashedWheelTimer = new HashedWheelTimer();
 
-    private RedisSessionDAO redisSessionDAO;
+    private final RedisSessionDAO redisSessionDAO;
 
     public ClearCache(RedisSessionDAO redisSessionDAO) {
         this.redisSessionDAO = redisSessionDAO;

@@ -23,50 +23,84 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+
+import static com.github.fartherp.shiro.Constant.DEFAULT_REDISSON_LRU_OBJ_CAPACITY;
+import static com.github.fartherp.shiro.Constant.DEFAULT_SESSION_IN_MEMORY_ENABLED;
+import static com.github.fartherp.shiro.Constant.DEFAULT_SESSION_IN_MEMORY_TIMEOUT;
+import static com.github.fartherp.shiro.Constant.DEFAULT_SESSION_KEY_PREFIX;
 
 /**
  * Created by IntelliJ IDEA.
  *
- * @author: CK
- * @date: 2019/1/1
+ * @author CK
+ * @date 2019/1/1
  */
 public class RedisSessionDAO extends AbstractSessionDAO {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RedisSessionDAO.class);
 
-    public static final String DEFAULT_SESSION_KEY_PREFIX = "shiro:session";
-    private String sessionKeyPrefix = DEFAULT_SESSION_KEY_PREFIX;
+    private final String sessionKeyPrefix;
 
-    private int expire = ExpireType.DEFAULT_EXPIRE.type;
+    private final int expire;
 
-    public static final boolean DEFAULT_SESSION_IN_MEMORY_ENABLED = true;
+    private final boolean sessionInMemoryEnabled;
 
-    private boolean sessionInMemoryEnabled = DEFAULT_SESSION_IN_MEMORY_ENABLED;
+    private final long sessionInMemoryTimeout;
 
-    public static final long DEFAULT_SESSION_IN_MEMORY_TIMEOUT = 1000L;
+    private final Codec codec;
 
-    private long sessionInMemoryTimeout = DEFAULT_SESSION_IN_MEMORY_TIMEOUT;
+	public static final FastThreadLocal<Map<Serializable, SessionWrapper>> sessionsInThread = new FastThreadLocal<>();
 
-    public static final FastThreadLocal<Map<Serializable, SessionWrapper>> sessionsInThread = new FastThreadLocal<>();
+    private final RedisCacheManager redisCacheManager;
 
-    private RedisCacheManager redisCacheManager;
+    private final RScoredSortedSet<String> sessionKeys;
 
-    private Codec codec = CodecType.FST_CODEC.getCodec();
+    private final ClearCache clearCache;
 
-    private RScoredSortedSet<String> sessionKeys;
+	private final Map<String, Object> lruMap;
 
-    private ClearCache clearCache;
+	public RedisSessionDAO(RedisCacheManager redisCacheManager) {
+		this(redisCacheManager, DEFAULT_SESSION_KEY_PREFIX, ExpireType.DEFAULT_EXPIRE.type,
+			DEFAULT_SESSION_IN_MEMORY_ENABLED, DEFAULT_SESSION_IN_MEMORY_TIMEOUT,
+			CodecType.FST_CODEC.getCodec(), DEFAULT_REDISSON_LRU_OBJ_CAPACITY);
+	}
 
-    public RedisSessionDAO(RedisCacheManager redisCacheManager) {
+    public RedisSessionDAO(RedisCacheManager redisCacheManager, String sessionKeyPrefix, int expire,
+						   boolean sessionInMemoryEnabled, long sessionInMemoryTimeout, Codec codec, int sessionLruSize) {
         this.redisCacheManager = redisCacheManager;
+        this.sessionKeyPrefix = StringUtils.hasText(sessionKeyPrefix) ? sessionKeyPrefix : DEFAULT_SESSION_KEY_PREFIX;
+        this.expire = expire > 0 ? expire : ExpireType.DEFAULT_EXPIRE.type;
+        this.sessionInMemoryEnabled = sessionInMemoryEnabled;
+        this.sessionInMemoryTimeout = sessionInMemoryTimeout > 0 ? sessionInMemoryTimeout : DEFAULT_SESSION_IN_MEMORY_TIMEOUT;
+        this.codec = codec != null ? codec : CodecType.FST_CODEC.getCodec();
+		int tmpSessionLruSize = sessionLruSize > 0 ? sessionLruSize : DEFAULT_REDISSON_LRU_OBJ_CAPACITY;
+		this.lruMap = new LinkedHashMap<String, Object>(tmpSessionLruSize, 0.75F, true) {
+			private static final long serialVersionUID = -7936195607152909097L;
+
+			@Override
+			protected boolean removeEldestEntry(Map.Entry<String, Object> eldest) {
+				return size() > tmpSessionLruSize;
+			}
+		};
         this.sessionKeys = this.redisCacheManager.getRedissonClient().getScoredSortedSet(sessionKeyPrefix);
         this.clearCache = new ClearCache(this);
         this.clearCache.init();
     }
+
+	@SuppressWarnings("unchecked")
+	private <T> T convertLruMap(String key, Function<String, T> function) {
+		return (T) lruMap.computeIfAbsent(key, function);
+	}
+
+	private <T> RBucket<T> getBucket(String redisSessionKey) {
+		return convertLruMap(redisSessionKey, k -> redisCacheManager.getRedissonClient().getBucket(k, codec));
+	}
 
     private String getRedisSessionKey(Serializable sessionId) {
         return this.sessionKeyPrefix + ":" + sessionId;
@@ -92,13 +126,8 @@ public class RedisSessionDAO extends AbstractSessionDAO {
         sessionWrapper.setSession(session);
 
         String key = getRedisSessionKey(sessionWrapper.getId());
-        RBucket<SessionWrapper> s = redisCacheManager.getRedissonClient().getBucket(key, codec);
-        long seconds;
-        if (expire == ExpireType.DEFAULT_EXPIRE.type) {
-            seconds = sessionWrapper.getTimeout() / 1000;
-        } else {
-            seconds = redisCacheManager.getTtl();
-        }
+        RBucket<SessionWrapper> s = getBucket(key);
+        long seconds = expire == ExpireType.DEFAULT_EXPIRE.type ? sessionWrapper.getTimeout() / 1000 : redisCacheManager.getTtl();
         s.set(sessionWrapper, seconds, TimeUnit.SECONDS);
         long timestamp = LocalDateTimeUtilies.getTimestamp(o -> o.plusSeconds(seconds));
         sessionKeys.add(timestamp, key);
@@ -118,7 +147,7 @@ public class RedisSessionDAO extends AbstractSessionDAO {
         Assert.notNull(redisCacheManager, "redisCacheManager is no null");
 
         String key = getRedisSessionKey(sessionId);
-        RBucket<SessionWrapper> s = redisCacheManager.getRedissonClient().getBucket(key, codec);
+        RBucket<SessionWrapper> s = getBucket(key);
         session = Optional.ofNullable(s.get()).map(SessionWrapper::getSession).orElse(null);
         if (this.sessionInMemoryEnabled) {
             setSessionToThreadLocal(sessionId, session);
@@ -139,7 +168,7 @@ public class RedisSessionDAO extends AbstractSessionDAO {
         }
         Assert.notNull(redisCacheManager, "redisCacheManager is no null");
 
-        RBucket<SessionWrapper> s = redisCacheManager.getRedissonClient().getBucket(getRedisSessionKey(session.getId()), codec);
+        RBucket<SessionWrapper> s = getBucket(getRedisSessionKey(session.getId()));
         s.delete();
 
         String key = getRedisSessionKey(session.getId());
@@ -154,7 +183,7 @@ public class RedisSessionDAO extends AbstractSessionDAO {
 
         List<Session> values = new ArrayList<>(keys.size());
         for (ScoredEntry<String> key : keys) {
-            RBucket<SessionWrapper> v = redisCacheManager.getRedissonClient().getBucket(key.getValue(), codec);
+            RBucket<SessionWrapper> v = getBucket(key.getValue());
             SessionWrapper sessionWrapper = v.get();
             if (sessionWrapper != null) {
                 values.add(sessionWrapper.getSession());
@@ -202,59 +231,16 @@ public class RedisSessionDAO extends AbstractSessionDAO {
         return sessionKeyPrefix;
     }
 
-    public void setSessionKeyPrefix(String sessionKeyPrefix) {
-        if (StringUtils.hasText(sessionKeyPrefix)) {
-            this.sessionKeyPrefix = sessionKeyPrefix;
-        }
-    }
-
     public int getExpire() {
         return expire;
-    }
-
-    public void setExpire(ExpireType expireType) {
-        if (expireType != null) {
-            this.expire = expireType.type;
-        }
     }
 
     public boolean isSessionInMemoryEnabled() {
         return sessionInMemoryEnabled;
     }
 
-    public void setSessionInMemoryEnabled(boolean sessionInMemoryEnabled) {
-        this.sessionInMemoryEnabled = sessionInMemoryEnabled;
-    }
-
     public long getSessionInMemoryTimeout() {
         return sessionInMemoryTimeout;
-    }
-
-    public void setSessionInMemoryTimeout(long sessionInMemoryTimeout) {
-        if (sessionInMemoryTimeout > 0) {
-            this.sessionInMemoryTimeout = sessionInMemoryTimeout;
-        }
-    }
-
-    public Codec getCodec() {
-        return codec;
-    }
-
-    public void setCodec(CodecType codecType) {
-        if (codecType != null) {
-            Codec codec = codecType.getCodec();
-            if (codec != null) {
-                this.codec = codec;
-            } else {
-                LOGGER.info("Lack of dependency packages is {}, use default codec", codecType.dependencyPackageName);
-            }
-        }
-    }
-
-    public void setCodec(Codec codec) {
-        if (codec != null) {
-            this.codec = codec;
-        }
     }
 
     public RedisCacheManager getRedisCacheManager() {

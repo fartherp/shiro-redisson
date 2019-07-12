@@ -8,7 +8,9 @@ import org.apache.shiro.cache.Cache;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import static com.github.fartherp.shiro.RedisCacheManager.MINUTE;
+import static com.github.fartherp.shiro.Constant.DEFAULT_CACHE_KEY_PREFIX;
+import static com.github.fartherp.shiro.Constant.DEFAULT_PRINCIPAL_ID_FIELD_NAME;
+import static com.github.fartherp.shiro.Constant.THIRTY_MINUTES;
 import static org.testng.Assert.*;
 
 /**
@@ -37,15 +39,7 @@ public class RedisCacheManagerTest extends BaseTest {
 
     @Test
     public void testGetKeyPrefix() {
-        redisCacheManager.setKeyPrefix("  ");
-        assertEquals(redisCacheManager.getKeyPrefix(), RedisCacheManager.DEFAULT_CACHE_KEY_PREFIX);
-    }
-
-    @Test
-    public void testSetKeyPrefix() {
-        String keyPrefix = "shiro:cache:test:";
-        redisCacheManager.setKeyPrefix(keyPrefix);
-        assertEquals(redisCacheManager.getKeyPrefix(), keyPrefix);
+        assertEquals(redisCacheManager.getKeyPrefix(), DEFAULT_CACHE_KEY_PREFIX);
     }
 
     @Test
@@ -55,28 +49,12 @@ public class RedisCacheManagerTest extends BaseTest {
 
     @Test
     public void testGetTtl() {
-        redisCacheManager.setTtl(0);
-        assertEquals(redisCacheManager.getTtl(), 30 * MINUTE);
-    }
-
-    @Test
-    public void testSetTtl() {
-        long ttl = 40;
-        redisCacheManager.setTtl(ttl);
-        assertEquals(redisCacheManager.getTtl(), ttl);
+        assertEquals(redisCacheManager.getTtl(), THIRTY_MINUTES);
     }
 
     @Test
     public void testGetPrincipalIdFieldName() {
-        redisCacheManager.setPrincipalIdFieldName("  ");
-        assertEquals(redisCacheManager.getPrincipalIdFieldName(), RedisCacheManager.DEFAULT_PRINCIPAL_ID_FIELD_NAME);
-    }
-
-    @Test
-    public void testSetPrincipalIdFieldName() {
-        String principalIdFieldName = "testId";
-        redisCacheManager.setPrincipalIdFieldName(principalIdFieldName);
-        assertEquals(redisCacheManager.getPrincipalIdFieldName(), principalIdFieldName);
+        assertEquals(redisCacheManager.getPrincipalIdFieldName(), DEFAULT_PRINCIPAL_ID_FIELD_NAME);
     }
 
     @Test

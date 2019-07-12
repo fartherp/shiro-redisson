@@ -6,8 +6,8 @@ package com.github.fartherp.shiro;
 
 /**
  * Created by IntelliJ IDEA.
- * Author: CK
- * Date: 2019/1/14
+ * @author CK
+ * @date 2019/1/14
  */
 public enum ExpireType {
     DEFAULT_EXPIRE(-2),

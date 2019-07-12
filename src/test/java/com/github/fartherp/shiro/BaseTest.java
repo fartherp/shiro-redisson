@@ -13,6 +13,8 @@ import org.testng.annotations.AfterMethod;
 
 import java.util.Date;
 
+import static com.github.fartherp.shiro.Constant.THIRTY_MINUTES;
+
 /**
  * <pre>
  *  @author: cuiyuqiang
@@ -45,7 +47,7 @@ public abstract class BaseTest {
         SimpleSession simpleSession = new SimpleSession();
         simpleSession.setStartTimestamp(new Date());
         simpleSession.setLastAccessTime(new Date());
-        simpleSession.setTimeout(1000 * 60 * 30);
+        simpleSession.setTimeout(THIRTY_MINUTES);
         simpleSession.setHost("127.0.0.1");
         simpleSession.setStopTimestamp(new Date());
         simpleSession.setExpired(true);

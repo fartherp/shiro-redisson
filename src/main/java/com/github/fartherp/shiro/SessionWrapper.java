@@ -17,8 +17,8 @@ import java.util.Map;
 
 /**
  * Created by IntelliJ IDEA.
- * Author: CK
- * Date: 2019/2/1
+ * @author CK
+ * @date 2019/2/1
  */
 public class SessionWrapper implements Serializable {
     private Serializable id;

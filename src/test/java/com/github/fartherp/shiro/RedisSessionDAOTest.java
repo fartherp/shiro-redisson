@@ -7,8 +7,6 @@ package com.github.fartherp.shiro;
 import org.apache.shiro.session.Session;
 import org.apache.shiro.session.UnknownSessionException;
 import org.apache.shiro.session.mgt.SimpleSession;
-import org.redisson.client.codec.LongCodec;
-import org.redisson.client.codec.StringCodec;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -16,6 +14,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.UUID;
 
+import static com.github.fartherp.shiro.Constant.DEFAULT_SESSION_KEY_PREFIX;
 import static org.testng.Assert.*;
 
 /**
@@ -124,15 +123,7 @@ public class RedisSessionDAOTest extends BaseTest {
 
     @Test
     public void testGetSessionKeyPrefix() {
-        redisSessionDAO.setSessionKeyPrefix("  ");
-        assertEquals(redisSessionDAO.getSessionKeyPrefix(), RedisSessionDAO.DEFAULT_SESSION_KEY_PREFIX);
-    }
-
-    @Test
-    public void testSetSessionKeyPrefix() {
-        String sessionKeyPrefix = "shiro:session:test";
-        redisSessionDAO.setSessionKeyPrefix(sessionKeyPrefix);
-        assertEquals(redisSessionDAO.getSessionKeyPrefix(), sessionKeyPrefix);
+        assertEquals(redisSessionDAO.getSessionKeyPrefix(), DEFAULT_SESSION_KEY_PREFIX);
     }
 
     @Test
@@ -141,45 +132,13 @@ public class RedisSessionDAOTest extends BaseTest {
     }
 
     @Test
-    public void testSetExpire() {
-        redisSessionDAO.setExpire(ExpireType.NO_EXPIRE);
-        assertEquals(redisSessionDAO.getExpire(), ExpireType.NO_EXPIRE.type);
-    }
-
-    @Test
     public void testIsSessionInMemoryEnabled() {
         assertTrue(redisSessionDAO.isSessionInMemoryEnabled());
     }
 
     @Test
-    public void testSetSessionInMemoryEnabled() {
-        redisSessionDAO.setSessionInMemoryEnabled(false);
-        assertFalse(redisSessionDAO.isSessionInMemoryEnabled());
-    }
-
-    @Test
     public void testGetSessionInMemoryTimeout() {
         assertEquals(redisSessionDAO.getSessionInMemoryTimeout(), 1000L);
-    }
-
-    @Test
-    public void testSetSessionInMemoryTimeout() {
-        long timeout = 2000L;
-        redisSessionDAO.setSessionInMemoryTimeout(timeout);
-        assertEquals(redisSessionDAO.getSessionInMemoryTimeout(), timeout);
-    }
-
-    @Test
-    public void testSetCodecType() {
-        redisSessionDAO.setCodec(CodecType.LONG_CODEC);
-        assertEquals(redisSessionDAO.getCodec(), LongCodec.INSTANCE);
-    }
-
-    @Test
-    public void testSetCodec() {
-        StringCodec codec = new StringCodec();
-        redisSessionDAO.setCodec(codec);
-        assertEquals(redisSessionDAO.getCodec(), codec);
     }
 
     @Test

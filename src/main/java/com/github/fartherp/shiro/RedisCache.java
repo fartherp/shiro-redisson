@@ -20,35 +20,49 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
  * Created by IntelliJ IDEA.
  *
- * @author: CK
- * @date: 2018/12/29
+ * @author CK
+ * @date 2018/12/29
  */
 public class RedisCache<K, V> implements Cache<K, V> {
 
-    private long ttl;
+    private final long ttl;
 
-    private RedisCacheManager redisCacheManager;
+    private final RedisCacheManager redisCacheManager;
 
-    private String cacheKeyPrefix;
+    private final String cacheKeyPrefix;
 
-    private String principalIdFieldName;
+    private final String principalIdFieldName;
 
-    private RScoredSortedSet<K> cacheKeys;
+    private final RScoredSortedSet<K> cacheKeys;
 
-    public RedisCache(RedisCacheManager redisCacheManager, String keyPrefix, String principalIdFieldName, long ttl) {
+	private final Map<String, Object> lruMap;
+
+    public RedisCache(RedisCacheManager redisCacheManager, String keyPrefix, String principalIdFieldName,
+					  long ttl, int cacheLruSize) {
         this.redisCacheManager = redisCacheManager;
         this.cacheKeyPrefix = keyPrefix;
         this.principalIdFieldName = principalIdFieldName;
         this.ttl = ttl;
         this.cacheKeys = redisCacheManager.getRedissonClient().getScoredSortedSet(this.cacheKeyPrefix);
+		this.lruMap = new LinkedHashMap<String, Object>(cacheLruSize, 0.75F, true) {
+			private static final long serialVersionUID = -7936195607152909097L;
+
+			@Override
+			protected boolean removeEldestEntry(Map.Entry<String, Object> eldest) {
+				return size() > cacheLruSize;
+			}
+		};
     }
 
     private String getRedisCacheKey(K key) {
@@ -102,13 +116,22 @@ public class RedisCache<K, V> implements Cache<K, V> {
         return "get" + this.principalIdFieldName.substring(0, 1).toUpperCase() + this.principalIdFieldName.substring(1);
     }
 
+	@SuppressWarnings("unchecked")
+	private <T> T convertLruMap(String key, Function<String, T> function) {
+		return (T) lruMap.computeIfAbsent(key, function);
+	}
+
+	private RBucket<V> getBucket(K key) {
+		return convertLruMap(getRedisCacheKey(key), k -> redisCacheManager.getRedissonClient().getBucket(k));
+	}
+
     public V get(K key) throws CacheException {
-        RBucket<V> v = redisCacheManager.getRedissonClient().getBucket(getRedisCacheKey(key));
+		RBucket<V> v = getBucket(key);
         return v.get();
     }
 
     public V put(K key, V value) throws CacheException {
-        RBucket<V> v = redisCacheManager.getRedissonClient().getBucket(getRedisCacheKey(key));
+        RBucket<V> v = getBucket(key);
         v.set(value, ttl, TimeUnit.SECONDS);
 
         cacheKeys.add(LocalDateTimeUtilies.getTimestamp(o -> o.plusSeconds(ttl)), key);
@@ -116,7 +139,7 @@ public class RedisCache<K, V> implements Cache<K, V> {
     }
 
     public V remove(K key) throws CacheException {
-        RBucket<V> v = redisCacheManager.getRedissonClient().getBucket(getRedisCacheKey(key));
+        RBucket<V> v = getBucket(key);
         V value = v.get();
         v.delete();
         cacheKeys.remove(key);
@@ -125,7 +148,7 @@ public class RedisCache<K, V> implements Cache<K, V> {
 
     public void clear() throws CacheException {
         for (K key : cacheKeys) {
-            RBucket<V> v = redisCacheManager.getRedissonClient().getBucket(getRedisCacheKey(key));
+            RBucket<V> v = getBucket(key);
             v.delete();
         }
         cacheKeys.delete();
@@ -146,7 +169,7 @@ public class RedisCache<K, V> implements Cache<K, V> {
 
         List<V> values = new ArrayList<>(keys.size());
         for (ScoredEntry<K> key : keys) {
-            RBucket<V> v = redisCacheManager.getRedissonClient().getBucket(getRedisCacheKey(key.getValue()));
+            RBucket<V> v = getBucket(key.getValue());
             V value = v.get();
             if (value != null) {
                 values.add(value);
