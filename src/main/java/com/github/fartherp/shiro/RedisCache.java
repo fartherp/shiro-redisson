@@ -56,7 +56,7 @@ public class RedisCache<K, V> implements Cache<K, V> {
         this.ttl = ttl;
         this.cacheKeys = redisCacheManager.getRedissonClient().getScoredSortedSet(this.cacheKeyPrefix);
 		this.lruMap = new LinkedHashMap<String, Object>(cacheLruSize, 0.75F, true) {
-			private static final long serialVersionUID = -7936195607152909097L;
+			private static final long serialVersionUID = 8936289417496258606L;
 
 			@Override
 			protected boolean removeEldestEntry(Map.Entry<String, Object> eldest) {

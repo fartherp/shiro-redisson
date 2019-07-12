@@ -82,7 +82,7 @@ public class RedisSessionDAO extends AbstractSessionDAO {
         this.codec = codecType != null ? codecType.getCodec() : CodecType.FST_CODEC.getCodec();
 		int tmpSessionLruSize = sessionLruSize > 0 ? sessionLruSize : DEFAULT_REDISSON_LRU_OBJ_CAPACITY;
 		this.lruMap = new LinkedHashMap<String, Object>(tmpSessionLruSize, 0.75F, true) {
-			private static final long serialVersionUID = -7936195607152909097L;
+			private static final long serialVersionUID = -7834112010389156278L;
 
 			@Override
 			protected boolean removeEldestEntry(Map.Entry<String, Object> eldest) {
