@@ -94,11 +94,13 @@ public class RedisCache<K, V> implements Cache<K, V> {
         try {
             Object idObj = pincipalIdGetter.invoke(principalObject);
             if (idObj == null) {
-                throw new PrincipalIdNullException(principalObject.getClass(), redisCacheManager.getPrincipalIdFieldName());
+                throw new PrincipalIdNullException(principalObject.getClass(),
+					redisCacheManager.getPrincipalIdFieldName());
             }
             redisKey = idObj.toString();
         } catch (IllegalAccessException | InvocationTargetException e) {
-            throw new PrincipalInstanceException(principalObject.getClass(), redisCacheManager.getPrincipalIdFieldName(), e);
+            throw new PrincipalInstanceException(principalObject.getClass(),
+				redisCacheManager.getPrincipalIdFieldName(), e);
         }
         return redisKey;
     }
@@ -109,7 +111,8 @@ public class RedisCache<K, V> implements Cache<K, V> {
         try {
             pincipalIdGetter = principalObject.getClass().getMethod(principalIdMethodName);
         } catch (NoSuchMethodException e) {
-            throw new PrincipalInstanceException(principalObject.getClass(), redisCacheManager.getPrincipalIdFieldName());
+            throw new PrincipalInstanceException(principalObject.getClass(),
+				redisCacheManager.getPrincipalIdFieldName());
         }
         return pincipalIdGetter;
     }
@@ -128,14 +131,17 @@ public class RedisCache<K, V> implements Cache<K, V> {
 	}
 
 	private RBucket<V> getBucket(K key) {
-		return convertLruMap(getRedisCacheKey(key), k -> redisCacheManager.getRedissonClient().getBucket(k, redisCacheManager.getCacheCodec()));
+		return convertLruMap(getRedisCacheKey(key),
+			k -> redisCacheManager.getRedissonClient().getBucket(k, redisCacheManager.getCacheCodec()));
 	}
 
+	@Override
     public V get(K key) throws CacheException {
 		RBucket<V> v = getBucket(key);
         return v.get();
     }
 
+	@Override
     public V put(K key, V value) throws CacheException {
         RBucket<V> v = getBucket(key);
         long ttl = redisCacheManager.getTtl();
@@ -145,6 +151,7 @@ public class RedisCache<K, V> implements Cache<K, V> {
         return value;
     }
 
+	@Override
     public V remove(K key) throws CacheException {
         RBucket<V> v = getBucket(key);
         V value = v.get();
@@ -153,6 +160,7 @@ public class RedisCache<K, V> implements Cache<K, V> {
         return value;
     }
 
+	@Override
     public void clear() throws CacheException {
         for (K key : cacheKeys) {
             RBucket<V> v = getBucket(key);
@@ -161,18 +169,24 @@ public class RedisCache<K, V> implements Cache<K, V> {
         cacheKeys.delete();
     }
 
+	@Override
     public int size() {
-        List<ScoredEntry<K>> keys = (List<ScoredEntry<K>>) cacheKeys.entryRange(System.currentTimeMillis(), false, Double.MAX_VALUE, true);
+        List<ScoredEntry<K>> keys = (List<ScoredEntry<K>>) cacheKeys.entryRange(System.currentTimeMillis(),
+			false, Double.MAX_VALUE, true);
         return keys.size();
     }
 
+	@Override
     public Set<K> keys() {
-        List<ScoredEntry<K>> keys = (List<ScoredEntry<K>>) cacheKeys.entryRange(System.currentTimeMillis(), false, Double.MAX_VALUE, true);
+        List<ScoredEntry<K>> keys = (List<ScoredEntry<K>>) cacheKeys.entryRange(System.currentTimeMillis(),
+			false, Double.MAX_VALUE, true);
         return keys.stream().map(ScoredEntry::getValue).collect(Collectors.toSet());
     }
 
+    @Override
     public Collection<V> values() {
-        List<ScoredEntry<K>> keys = (List<ScoredEntry<K>>) cacheKeys.entryRange(System.currentTimeMillis(), false, Double.MAX_VALUE, true);
+        List<ScoredEntry<K>> keys = (List<ScoredEntry<K>>) cacheKeys.entryRange(System.currentTimeMillis(),
+			false, Double.MAX_VALUE, true);
 
         List<V> values = new ArrayList<>(keys.size());
         for (ScoredEntry<K> key : keys) {

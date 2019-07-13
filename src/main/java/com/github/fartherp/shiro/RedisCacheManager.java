@@ -61,11 +61,14 @@ public class RedisCacheManager implements CacheManager {
 			THIRTY_MINUTES, DEFAULT_REDISSON_LRU_OBJ_CAPACITY, FST_CODEC, FST_CODEC);
     }
 
-    public RedisCacheManager(RedissonClient redissonClient, String keyPrefix, String principalIdFieldName,
-							 long ttl, int cacheLruSize, CodecType cacheCodecType, CodecType cacheKeysCodecType) {
-        this.redissonClient = redissonClient;
+    public RedisCacheManager(RedissonClient redissonClient, String keyPrefix,
+							 String principalIdFieldName, long ttl,
+							 int cacheLruSize, CodecType cacheCodecType,
+							 CodecType cacheKeysCodecType) {
+    	this.redissonClient = redissonClient;
         this.keyPrefix = StringUtils.hasText(keyPrefix) ? keyPrefix : DEFAULT_CACHE_KEY_PREFIX;
-        this.principalIdFieldName = StringUtils.hasText(principalIdFieldName) ? principalIdFieldName : DEFAULT_PRINCIPAL_ID_FIELD_NAME;
+        this.principalIdFieldName = StringUtils.hasText(principalIdFieldName)
+			? principalIdFieldName : DEFAULT_PRINCIPAL_ID_FIELD_NAME;
         this.ttl = ttl > 0 ? ttl : THIRTY_MINUTES;
         this.cacheLruSize = cacheLruSize > 0 ? cacheLruSize : DEFAULT_REDISSON_LRU_OBJ_CAPACITY;
         this.cacheCodec = cacheCodecType != null ? cacheCodecType.getCodec() : FST_CODEC.getCodec();
@@ -73,6 +76,7 @@ public class RedisCacheManager implements CacheManager {
     }
 
     @SuppressWarnings("all")
+	@Override
     public <K, V> Cache<K, V> getCache(String name) throws CacheException {
         Assert.notNull(redissonClient, "RedissonClient is no null");
         Cache cache = caches.get(name);

@@ -15,6 +15,12 @@
  */
 package com.github.fartherp.shiro.exception;
 
+/**
+ * Created by IntelliJ IDEA.
+ *
+ * @author CK
+ * @date 2019/1/31
+ */
 public class CacheManagerPrincipalIdNotAssignedException extends RuntimeException  {
 
     private static final String MESSAGE = "CacheManager didn't assign Principal Id field name!";

@@ -72,6 +72,7 @@ public class ClearCache implements TimerTask {
         }
     }
 
+    @Override
     public void run(Timeout timeout) throws Exception {
         clearSession();
         clearCache();

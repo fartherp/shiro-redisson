@@ -15,6 +15,12 @@
  */
 package com.github.fartherp.shiro.exception;
 
+/**
+ * Created by IntelliJ IDEA.
+ *
+ * @author CK
+ * @date 2019/1/31
+ */
 public class PrincipalInstanceException extends RuntimeException  {
 
     private static final String MESSAGE = "We need a field to identify this Cache Object in Redis. "

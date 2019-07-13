@@ -22,10 +22,19 @@ package com.github.fartherp.shiro;
  * @date 2019/1/14
  */
 public enum ExpireType {
-    DEFAULT_EXPIRE(-2),
-    NO_EXPIRE(-1),
-    ;
-    public int type;
+	/**
+	 * session默认过期
+	 */
+    DEFAULT_EXPIRE(-3),
+	/**
+	 * session自定义过期
+	 */
+	CUSTOM_EXPIRE(-2),
+	/**
+	 * session不过期
+	 */
+    NO_EXPIRE(-1);
+    int type;
 
     ExpireType(int type) {
         this.type = type;

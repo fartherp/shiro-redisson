@@ -44,15 +44,18 @@ public class RedisSessionListener implements SessionListener {
         this.cachingRealms = cachingRealms;
     }
 
+	@Override
     public void onStart(Session session) {
         // do nothing
     }
 
+	@Override
     public void onStop(Session session) {
         LOGGER.debug("session onStop ID: " + session.getId());
         this.sessionDAO.delete(session);
     }
 
+	@Override
     public void onExpiration(Session session) {
         LOGGER.debug("session onExpiration ID: " + session.getId());
         this.sessionDAO.delete(session);

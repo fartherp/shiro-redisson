@@ -39,12 +39,18 @@ import org.redisson.codec.SnappyCodecV2;
  * @date 2019/1/31
  */
 public enum CodecType {
+	/**
+	 * fst编码
+	 */
     FST_CODEC("default") {
 		@Override
 		public Codec getCodec(ClassLoader classLoader) {
 			return new FstCodec(classLoader);
 		}
 	},
+	/**
+	 * json编码
+	 */
     JSON_JACKSON_CODEC("default") {
 		@Override
 		public Codec getCodec(ClassLoader classLoader) {
@@ -131,7 +137,7 @@ public enum CodecType {
 		}
 	};
 
-    public String dependencyPackageName;
+    String dependencyPackageName;
 
     CodecType(String dependencyPackageName) {
         this.dependencyPackageName = dependencyPackageName;
@@ -140,7 +146,7 @@ public enum CodecType {
     public Codec getCodec() {
         try {
             return getCodec(this.getClass().getClassLoader());
-        } catch (Throwable e) {
+        } catch (Exception e) {
             return JSON_JACKSON_CODEC.getCodec();
         }
     }

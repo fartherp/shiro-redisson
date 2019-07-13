@@ -158,7 +158,7 @@ public class SessionWrapper implements Serializable {
         if (lastAccessTime != null) {
             out.writeObject(lastAccessTime);
         }
-        if (timeout != 0l) {
+        if (timeout != 0L) {
             out.writeLong(timeout);
         }
         if (expired) {
@@ -218,7 +218,7 @@ public class SessionWrapper implements Serializable {
         bitMask = startTimestamp != null ? bitMask | START_TIMESTAMP_BIT_MASK : bitMask;
         bitMask = stopTimestamp != null ? bitMask | STOP_TIMESTAMP_BIT_MASK : bitMask;
         bitMask = lastAccessTime != null ? bitMask | LAST_ACCESS_TIME_BIT_MASK : bitMask;
-        bitMask = timeout != 0l ? bitMask | TIMEOUT_BIT_MASK : bitMask;
+        bitMask = timeout != 0L ? bitMask | TIMEOUT_BIT_MASK : bitMask;
         bitMask = expired ? bitMask | EXPIRED_BIT_MASK : bitMask;
         bitMask = host != null ? bitMask | HOST_BIT_MASK : bitMask;
         bitMask = !CollectionUtils.isEmpty(attributes) ? bitMask | ATTRIBUTES_BIT_MASK : bitMask;

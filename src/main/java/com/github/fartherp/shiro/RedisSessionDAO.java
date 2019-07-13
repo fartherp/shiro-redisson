@@ -25,8 +25,6 @@ import org.redisson.api.RBucket;
 import org.redisson.api.RScoredSortedSet;
 import org.redisson.client.codec.Codec;
 import org.redisson.client.protocol.ScoredEntry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -54,8 +52,6 @@ import static com.github.fartherp.shiro.Constant.DEFAULT_SESSION_KEY_PREFIX;
  */
 public class RedisSessionDAO extends AbstractSessionDAO {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RedisSessionDAO.class);
-
     private final String sessionKeyPrefix;
 
     private final int expire;
@@ -66,7 +62,7 @@ public class RedisSessionDAO extends AbstractSessionDAO {
 
     private final Codec codec;
 
-	public static final FastThreadLocal<Map<Serializable, SessionWrapper>> sessionsInThread = new FastThreadLocal<>();
+	public static final FastThreadLocal<Map<Serializable, SessionWrapper>> SESSIONS_IN_THREAD;
 
     private final RedisCacheManager redisCacheManager;
 
@@ -76,20 +72,26 @@ public class RedisSessionDAO extends AbstractSessionDAO {
 
 	private final Map<String, Object> lruMap;
 
+	static {
+		SESSIONS_IN_THREAD = new FastThreadLocal<>();
+	}
+
 	public RedisSessionDAO(RedisCacheManager redisCacheManager) {
 		this(redisCacheManager, DEFAULT_SESSION_KEY_PREFIX, ExpireType.DEFAULT_EXPIRE,
 			DEFAULT_SESSION_IN_MEMORY_ENABLED, DEFAULT_SESSION_IN_MEMORY_TIMEOUT,
 			CodecType.FST_CODEC, DEFAULT_REDISSON_LRU_OBJ_CAPACITY);
 	}
 
-    public RedisSessionDAO(RedisCacheManager redisCacheManager, String sessionKeyPrefix, ExpireType expireType,
-						   boolean sessionInMemoryEnabled, long sessionInMemoryTimeout, CodecType codecType,
+    public RedisSessionDAO(RedisCacheManager redisCacheManager, String sessionKeyPrefix,
+						   ExpireType expireType, boolean sessionInMemoryEnabled,
+						   long sessionInMemoryTimeout, CodecType codecType,
 						   int sessionLruSize) {
         this.redisCacheManager = redisCacheManager;
         this.sessionKeyPrefix = StringUtils.hasText(sessionKeyPrefix) ? sessionKeyPrefix : DEFAULT_SESSION_KEY_PREFIX;
         this.expire = expireType != null ? expireType.type : ExpireType.DEFAULT_EXPIRE.type;
         this.sessionInMemoryEnabled = sessionInMemoryEnabled;
-        this.sessionInMemoryTimeout = sessionInMemoryTimeout > 0 ? sessionInMemoryTimeout : DEFAULT_SESSION_IN_MEMORY_TIMEOUT;
+        this.sessionInMemoryTimeout = sessionInMemoryTimeout > 0
+			? sessionInMemoryTimeout : DEFAULT_SESSION_IN_MEMORY_TIMEOUT;
         this.codec = codecType != null ? codecType.getCodec() : CodecType.FST_CODEC.getCodec();
 		int tmpSessionLruSize = sessionLruSize > 0 ? sessionLruSize : DEFAULT_REDISSON_LRU_OBJ_CAPACITY;
 		this.lruMap = new LinkedHashMap<String, Object>(tmpSessionLruSize, 0.75F, true) {
@@ -118,6 +120,7 @@ public class RedisSessionDAO extends AbstractSessionDAO {
         return this.sessionKeyPrefix + ":" + sessionId;
     }
 
+	@Override
     protected Serializable doCreate(Session session) {
         if (session == null) {
             throw new UnknownSessionException("session is null");
@@ -139,12 +142,23 @@ public class RedisSessionDAO extends AbstractSessionDAO {
 
         String key = getRedisSessionKey(sessionWrapper.getId());
         RBucket<SessionWrapper> s = getBucket(key);
-        long seconds = expire == ExpireType.DEFAULT_EXPIRE.type ? sessionWrapper.getTimeout() / 1000 : redisCacheManager.getTtl();
-        s.set(sessionWrapper, seconds, TimeUnit.SECONDS);
-        long timestamp = LocalDateTimeUtilies.getTimestamp(o -> o.plusSeconds(seconds));
+		long timestamp;
+		if (expire == ExpireType.DEFAULT_EXPIRE.type) {
+			long seconds = sessionWrapper.getTimeout() / 1000;
+			timestamp = LocalDateTimeUtilies.getTimestamp(o -> o.plusSeconds(seconds));
+			s.set(sessionWrapper, seconds, TimeUnit.SECONDS);
+		} else if (expire == ExpireType.CUSTOM_EXPIRE.type) {
+			long seconds = redisCacheManager.getTtl();
+			s.set(sessionWrapper, seconds, TimeUnit.SECONDS);
+			timestamp = LocalDateTimeUtilies.getTimestamp(o -> o.plusSeconds(seconds));
+		} else {
+			s.set(sessionWrapper);
+			timestamp = Long.MAX_VALUE;
+		}
         sessionKeys.add(timestamp, key);
     }
 
+	@Override
     protected Session doReadSession(Serializable sessionId) {
         if (sessionId == null) {
             return null;
@@ -167,6 +181,7 @@ public class RedisSessionDAO extends AbstractSessionDAO {
         return session;
     }
 
+	@Override
     public void update(Session session) throws UnknownSessionException {
         this.saveSession(session);
         if (this.sessionInMemoryEnabled) {
@@ -174,6 +189,7 @@ public class RedisSessionDAO extends AbstractSessionDAO {
         }
     }
 
+	@Override
     public void delete(Session session) {
         if (session == null || session.getId() == null) {
             return;
@@ -187,11 +203,13 @@ public class RedisSessionDAO extends AbstractSessionDAO {
         sessionKeys.remove(key);
     }
 
+	@Override
     public Collection<Session> getActiveSessions() {
         Assert.notNull(redisCacheManager, "redisCacheManager is no null");
 
         // 获取存活的session
-        List<ScoredEntry<String>> keys = (List<ScoredEntry<String>>) sessionKeys.entryRange(System.currentTimeMillis(), false, Double.MAX_VALUE, true);
+        List<ScoredEntry<String>> keys = (List<ScoredEntry<String>>) sessionKeys.entryRange(System.currentTimeMillis(),
+			false, Double.MAX_VALUE, true);
 
         List<Session> values = new ArrayList<>(keys.size());
         for (ScoredEntry<String> key : keys) {
@@ -208,10 +226,10 @@ public class RedisSessionDAO extends AbstractSessionDAO {
     	if (s == null) {
     		return;
 		}
-        Map<Serializable, SessionWrapper> sessionMap = sessionsInThread.get();
+        Map<Serializable, SessionWrapper> sessionMap = SESSIONS_IN_THREAD.get();
         if (sessionMap == null) {
-            sessionMap = new HashMap<>();
-            sessionsInThread.set(sessionMap);
+            sessionMap = new HashMap<>(4);
+            SESSIONS_IN_THREAD.set(sessionMap);
         }
         SessionWrapper sessionWrapper = new SessionWrapper();
         sessionWrapper.setCreateTime(new Date());
@@ -220,7 +238,7 @@ public class RedisSessionDAO extends AbstractSessionDAO {
     }
 
     private Session getSessionFromThreadLocal(Serializable sessionId) {
-        Map<Serializable, SessionWrapper> sessionMap = sessionsInThread.get();
+        Map<Serializable, SessionWrapper> sessionMap = SESSIONS_IN_THREAD.get();
         if (sessionMap == null) {
             return null;
         }
