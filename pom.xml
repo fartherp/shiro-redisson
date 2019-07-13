@@ -276,7 +276,7 @@
 					<configuration>
 						<excludes>
 							<exclude>**/com/github/fartherp/shiro/exception/*</exclude>
-							<exclude>**/com/github/fartherp/shiro/exception/RedisSessionListener.class</exclude>
+							<exclude>**/com/github/fartherp/shiro/RedisSessionListener.class</exclude>
 						</excludes>
 					</configuration>
                     <executions>
