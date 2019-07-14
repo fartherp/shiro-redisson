@@ -46,7 +46,10 @@ public class RedisCacheManager implements CacheManager {
 
     private final String principalIdFieldName;
 
-    private final long ttl;
+	/**
+	 * 毫秒
+	 */
+	private final long ttl;
 
     private final int cacheLruSize;
 

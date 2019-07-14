@@ -40,6 +40,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static com.github.fartherp.shiro.Constant.SECONDS;
+
 /**
  * Created by IntelliJ IDEA.
  *
@@ -52,14 +54,14 @@ public class RedisCache<K, V> implements Cache<K, V> {
 
     private final String cacheKeyPrefix;
 
-	private final Codec cacheKeysCodec;
+    private final RScoredSortedSet<K> cacheKeys;
 
 	private final Map<String, Object> lruMap;
 
     public RedisCache(RedisCacheManager redisCacheManager, String keyPrefix, int cacheLruSize, Codec cacheKeysCodec) {
         this.redisCacheManager = redisCacheManager;
         this.cacheKeyPrefix = keyPrefix;
-        this.cacheKeysCodec = cacheKeysCodec;
+        this.cacheKeys = redisCacheManager.getRedissonClient().getScoredSortedSet(this.cacheKeyPrefix, cacheKeysCodec);
 		this.lruMap = new LinkedHashMap<String, Object>(cacheLruSize, 0.75F, true) {
 			private static final long serialVersionUID = 8936289417496258606L;
 
@@ -90,31 +92,27 @@ public class RedisCache<K, V> implements Cache<K, V> {
     }
 
     private String getIdObj(Object principalObject, Method pincipalIdGetter) {
-        String redisKey;
         try {
             Object idObj = pincipalIdGetter.invoke(principalObject);
             if (idObj == null) {
                 throw new PrincipalIdNullException(principalObject.getClass(),
 					redisCacheManager.getPrincipalIdFieldName());
             }
-            redisKey = idObj.toString();
+            return idObj.toString();
         } catch (IllegalAccessException | InvocationTargetException e) {
             throw new PrincipalInstanceException(principalObject.getClass(),
 				redisCacheManager.getPrincipalIdFieldName(), e);
         }
-        return redisKey;
     }
 
     private Method getPrincipalIdGetter(Object principalObject) {
-        Method pincipalIdGetter;
         String principalIdMethodName = this.getPrincipalIdMethodName();
         try {
-            pincipalIdGetter = principalObject.getClass().getMethod(principalIdMethodName);
+			return principalObject.getClass().getMethod(principalIdMethodName);
         } catch (NoSuchMethodException e) {
             throw new PrincipalInstanceException(principalObject.getClass(),
 				redisCacheManager.getPrincipalIdFieldName());
         }
-        return pincipalIdGetter;
     }
 
     private String getPrincipalIdMethodName() {
@@ -145,9 +143,9 @@ public class RedisCache<K, V> implements Cache<K, V> {
     public V put(K key, V value) throws CacheException {
         RBucket<V> v = getBucket(key);
         long ttl = redisCacheManager.getTtl();
-        v.set(value, ttl, TimeUnit.SECONDS);
+        v.set(value, ttl, TimeUnit.MILLISECONDS);
 
-		getCacheKeys().add(LocalDateTimeUtilies.getTimestamp(o -> o.plusSeconds(ttl)), key);
+        cacheKeys.add(LocalDateTimeUtilies.getTimestamp(o -> o.plusNanos(ttl * SECONDS * SECONDS)), key);
         return value;
     }
 
@@ -156,36 +154,36 @@ public class RedisCache<K, V> implements Cache<K, V> {
         RBucket<V> v = getBucket(key);
         V value = v.get();
         v.delete();
-		getCacheKeys().remove(key);
+        cacheKeys.removeAsync(key);
         return value;
     }
 
 	@Override
     public void clear() throws CacheException {
-        for (K key : getCacheKeys()) {
+        for (K key : cacheKeys) {
             RBucket<V> v = getBucket(key);
-            v.delete();
+            v.deleteAsync();
         }
-		getCacheKeys().delete();
+        cacheKeys.deleteAsync();
     }
 
 	@Override
     public int size() {
-        List<ScoredEntry<K>> keys = (List<ScoredEntry<K>>) getCacheKeys().entryRange(System.currentTimeMillis(),
+        List<ScoredEntry<K>> keys = (List<ScoredEntry<K>>) cacheKeys.entryRange(System.currentTimeMillis(),
 			false, Double.MAX_VALUE, true);
         return keys.size();
     }
 
 	@Override
     public Set<K> keys() {
-        List<ScoredEntry<K>> keys = (List<ScoredEntry<K>>) getCacheKeys().entryRange(System.currentTimeMillis(),
+        List<ScoredEntry<K>> keys = (List<ScoredEntry<K>>) cacheKeys.entryRange(System.currentTimeMillis(),
 			false, Double.MAX_VALUE, true);
         return keys.stream().map(ScoredEntry::getValue).collect(Collectors.toSet());
     }
 
     @Override
     public Collection<V> values() {
-        List<ScoredEntry<K>> keys = (List<ScoredEntry<K>>) getCacheKeys().entryRange(System.currentTimeMillis(),
+        List<ScoredEntry<K>> keys = (List<ScoredEntry<K>>) cacheKeys.entryRange(System.currentTimeMillis(),
 			false, Double.MAX_VALUE, true);
 
         List<V> values = new ArrayList<>(keys.size());
@@ -201,8 +199,6 @@ public class RedisCache<K, V> implements Cache<K, V> {
     }
 
     public RScoredSortedSet<K> getCacheKeys() {
-		RScoredSortedSet<K> cacheKeys = convertLruMap(cacheKeyPrefix,
-			k -> redisCacheManager.getRedissonClient().getScoredSortedSet(k, cacheKeysCodec));
         return cacheKeys;
     }
 }

@@ -22,8 +22,20 @@ package com.github.fartherp.shiro;
  * @date 2019/7/11
  */
 public interface Constant {
-	long MINUTE = 1000 * 60;
 
+	/**
+	 * 一秒
+	 */
+	long SECONDS = 1000L;
+
+	/**
+	 * 一分钟
+	 */
+	long MINUTE = 60 * SECONDS;
+
+	/**
+	 * 30分钟
+	 */
 	long THIRTY_MINUTES = 30 * MINUTE;
 
 	String DEFAULT_CACHE_KEY_PREFIX = "shiro:cache:";

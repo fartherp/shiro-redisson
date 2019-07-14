@@ -17,6 +17,7 @@ package com.github.fartherp.shiro;
 
 import org.testng.annotations.Test;
 
+import static com.github.fartherp.shiro.Constant.SECONDS;
 import static org.testng.Assert.*;
 
 /**
@@ -28,8 +29,14 @@ import static org.testng.Assert.*;
 public class LocalDateTimeUtiliesTest {
 
     @Test
-    public void testGetTimestamp() {
+    public void testMinutesGetTimestamp() {
         long s = LocalDateTimeUtilies.getTimestamp(o -> o.plusMinutes(5));
         assertTrue(s > 0);
     }
+
+	@Test
+	public void testGetTimestamp() {
+		long s = LocalDateTimeUtilies.getTimestamp(o -> o.plusNanos(5 * SECONDS * SECONDS * SECONDS));
+		assertTrue(s > 0);
+	}
 }

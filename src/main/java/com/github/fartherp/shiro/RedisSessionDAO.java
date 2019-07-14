@@ -43,6 +43,7 @@ import static com.github.fartherp.shiro.Constant.DEFAULT_REDISSON_LRU_OBJ_CAPACI
 import static com.github.fartherp.shiro.Constant.DEFAULT_SESSION_IN_MEMORY_ENABLED;
 import static com.github.fartherp.shiro.Constant.DEFAULT_SESSION_IN_MEMORY_TIMEOUT;
 import static com.github.fartherp.shiro.Constant.DEFAULT_SESSION_KEY_PREFIX;
+import static com.github.fartherp.shiro.Constant.SECONDS;
 
 /**
  * Created by IntelliJ IDEA.
@@ -62,9 +63,11 @@ public class RedisSessionDAO extends AbstractSessionDAO {
 
     private final Codec codec;
 
-	public static final FastThreadLocal<Map<Serializable, SessionWrapper>> SESSIONS_IN_THREAD;
+	private static final FastThreadLocal<Map<Serializable, SessionWrapper>> SESSIONS_IN_THREAD;
 
     private final RedisCacheManager redisCacheManager;
+
+	private final RScoredSortedSet<String> sessionKeys;
 
     private final ClearCache clearCache;
 
@@ -100,6 +103,8 @@ public class RedisSessionDAO extends AbstractSessionDAO {
 				return size() > tmpSessionLruSize;
 			}
 		};
+		this.sessionKeys = this.redisCacheManager.getRedissonClient()
+			.getScoredSortedSet(this.sessionKeyPrefix, CodecType.STRING_CODEC.getCodec());
         this.clearCache = new ClearCache(this);
         this.clearCache.init();
     }
@@ -141,18 +146,20 @@ public class RedisSessionDAO extends AbstractSessionDAO {
         RBucket<SessionWrapper> s = getBucket(key);
 		long timestamp;
 		if (expire == ExpireType.DEFAULT_EXPIRE.type) {
-			long seconds = sessionWrapper.getTimeout() / 1000;
-			timestamp = LocalDateTimeUtilies.getTimestamp(o -> o.plusSeconds(seconds));
-			s.set(sessionWrapper, seconds, TimeUnit.SECONDS);
+			long milliSeconds = sessionWrapper.getTimeout();
+			s.set(sessionWrapper, milliSeconds, TimeUnit.MILLISECONDS);
+			timestamp = LocalDateTimeUtilies
+				.getTimestamp(o -> o.plusNanos(milliSeconds * SECONDS * SECONDS));
 		} else if (expire == ExpireType.CUSTOM_EXPIRE.type) {
-			long seconds = redisCacheManager.getTtl();
-			s.set(sessionWrapper, seconds, TimeUnit.SECONDS);
-			timestamp = LocalDateTimeUtilies.getTimestamp(o -> o.plusSeconds(seconds));
+			long milliSeconds = redisCacheManager.getTtl();
+			s.set(sessionWrapper, milliSeconds, TimeUnit.MILLISECONDS);
+			timestamp = LocalDateTimeUtilies
+				.getTimestamp(o -> o.plusNanos(milliSeconds * SECONDS * SECONDS));
 		} else {
 			s.set(sessionWrapper);
 			timestamp = Long.MAX_VALUE;
 		}
-		getSessionKeys().add(timestamp, key);
+		sessionKeys.add(timestamp, key);
     }
 
 	@Override
@@ -197,7 +204,7 @@ public class RedisSessionDAO extends AbstractSessionDAO {
         s.delete();
 
         String key = getRedisSessionKey(session.getId());
-		getSessionKeys().remove(key);
+		sessionKeys.removeAsync(key);
     }
 
 	@Override
@@ -205,7 +212,7 @@ public class RedisSessionDAO extends AbstractSessionDAO {
         Assert.notNull(redisCacheManager, "redisCacheManager is no null");
 
         // 获取存活的session
-        List<ScoredEntry<String>> keys = (List<ScoredEntry<String>>) getSessionKeys()
+        List<ScoredEntry<String>> keys = (List<ScoredEntry<String>>) sessionKeys
 			.entryRange(System.currentTimeMillis(), false, Double.MAX_VALUE, true);
 
         List<Session> values = new ArrayList<>(keys.size());
@@ -275,9 +282,6 @@ public class RedisSessionDAO extends AbstractSessionDAO {
     }
 
     public RScoredSortedSet<String> getSessionKeys() {
-		RScoredSortedSet<String> sessionKeys = convertLruMap(sessionKeyPrefix,
-			k -> redisCacheManager.getRedissonClient()
-				.getScoredSortedSet(k, CodecType.STRING_CODEC.getCodec()));
 		return sessionKeys;
     }
 }
