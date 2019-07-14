@@ -52,14 +52,14 @@ public class RedisCache<K, V> implements Cache<K, V> {
 
     private final String cacheKeyPrefix;
 
-    private final RScoredSortedSet<K> cacheKeys;
+	private final Codec cacheKeysCodec;
 
 	private final Map<String, Object> lruMap;
 
     public RedisCache(RedisCacheManager redisCacheManager, String keyPrefix, int cacheLruSize, Codec cacheKeysCodec) {
         this.redisCacheManager = redisCacheManager;
         this.cacheKeyPrefix = keyPrefix;
-        this.cacheKeys = redisCacheManager.getRedissonClient().getScoredSortedSet(this.cacheKeyPrefix, cacheKeysCodec);
+        this.cacheKeysCodec = cacheKeysCodec;
 		this.lruMap = new LinkedHashMap<String, Object>(cacheLruSize, 0.75F, true) {
 			private static final long serialVersionUID = 8936289417496258606L;
 
@@ -147,7 +147,7 @@ public class RedisCache<K, V> implements Cache<K, V> {
         long ttl = redisCacheManager.getTtl();
         v.set(value, ttl, TimeUnit.SECONDS);
 
-        cacheKeys.add(LocalDateTimeUtilies.getTimestamp(o -> o.plusSeconds(ttl)), key);
+		getCacheKeys().add(LocalDateTimeUtilies.getTimestamp(o -> o.plusSeconds(ttl)), key);
         return value;
     }
 
@@ -156,36 +156,36 @@ public class RedisCache<K, V> implements Cache<K, V> {
         RBucket<V> v = getBucket(key);
         V value = v.get();
         v.delete();
-        cacheKeys.remove(key);
+		getCacheKeys().remove(key);
         return value;
     }
 
 	@Override
     public void clear() throws CacheException {
-        for (K key : cacheKeys) {
+        for (K key : getCacheKeys()) {
             RBucket<V> v = getBucket(key);
             v.delete();
         }
-        cacheKeys.delete();
+		getCacheKeys().delete();
     }
 
 	@Override
     public int size() {
-        List<ScoredEntry<K>> keys = (List<ScoredEntry<K>>) cacheKeys.entryRange(System.currentTimeMillis(),
+        List<ScoredEntry<K>> keys = (List<ScoredEntry<K>>) getCacheKeys().entryRange(System.currentTimeMillis(),
 			false, Double.MAX_VALUE, true);
         return keys.size();
     }
 
 	@Override
     public Set<K> keys() {
-        List<ScoredEntry<K>> keys = (List<ScoredEntry<K>>) cacheKeys.entryRange(System.currentTimeMillis(),
+        List<ScoredEntry<K>> keys = (List<ScoredEntry<K>>) getCacheKeys().entryRange(System.currentTimeMillis(),
 			false, Double.MAX_VALUE, true);
         return keys.stream().map(ScoredEntry::getValue).collect(Collectors.toSet());
     }
 
     @Override
     public Collection<V> values() {
-        List<ScoredEntry<K>> keys = (List<ScoredEntry<K>>) cacheKeys.entryRange(System.currentTimeMillis(),
+        List<ScoredEntry<K>> keys = (List<ScoredEntry<K>>) getCacheKeys().entryRange(System.currentTimeMillis(),
 			false, Double.MAX_VALUE, true);
 
         List<V> values = new ArrayList<>(keys.size());
@@ -201,6 +201,8 @@ public class RedisCache<K, V> implements Cache<K, V> {
     }
 
     public RScoredSortedSet<K> getCacheKeys() {
+		RScoredSortedSet<K> cacheKeys = convertLruMap(cacheKeyPrefix,
+			k -> redisCacheManager.getRedissonClient().getScoredSortedSet(k, cacheKeysCodec));
         return cacheKeys;
     }
 }

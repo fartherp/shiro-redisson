@@ -66,8 +66,6 @@ public class RedisSessionDAO extends AbstractSessionDAO {
 
     private final RedisCacheManager redisCacheManager;
 
-    private final RScoredSortedSet<String> sessionKeys;
-
     private final ClearCache clearCache;
 
 	private final Map<String, Object> lruMap;
@@ -102,7 +100,6 @@ public class RedisSessionDAO extends AbstractSessionDAO {
 				return size() > tmpSessionLruSize;
 			}
 		};
-        this.sessionKeys = this.redisCacheManager.getRedissonClient().getScoredSortedSet(sessionKeyPrefix);
         this.clearCache = new ClearCache(this);
         this.clearCache.init();
     }
@@ -155,7 +152,7 @@ public class RedisSessionDAO extends AbstractSessionDAO {
 			s.set(sessionWrapper);
 			timestamp = Long.MAX_VALUE;
 		}
-        sessionKeys.add(timestamp, key);
+		getSessionKeys().add(timestamp, key);
     }
 
 	@Override
@@ -200,7 +197,7 @@ public class RedisSessionDAO extends AbstractSessionDAO {
         s.delete();
 
         String key = getRedisSessionKey(session.getId());
-        sessionKeys.remove(key);
+		getSessionKeys().remove(key);
     }
 
 	@Override
@@ -208,8 +205,8 @@ public class RedisSessionDAO extends AbstractSessionDAO {
         Assert.notNull(redisCacheManager, "redisCacheManager is no null");
 
         // 获取存活的session
-        List<ScoredEntry<String>> keys = (List<ScoredEntry<String>>) sessionKeys.entryRange(System.currentTimeMillis(),
-			false, Double.MAX_VALUE, true);
+        List<ScoredEntry<String>> keys = (List<ScoredEntry<String>>) getSessionKeys()
+			.entryRange(System.currentTimeMillis(), false, Double.MAX_VALUE, true);
 
         List<Session> values = new ArrayList<>(keys.size());
         for (ScoredEntry<String> key : keys) {
@@ -278,6 +275,9 @@ public class RedisSessionDAO extends AbstractSessionDAO {
     }
 
     public RScoredSortedSet<String> getSessionKeys() {
-        return sessionKeys;
+		RScoredSortedSet<String> sessionKeys = convertLruMap(sessionKeyPrefix,
+			k -> redisCacheManager.getRedissonClient()
+				.getScoredSortedSet(k, CodecType.STRING_CODEC.getCodec()));
+		return sessionKeys;
     }
 }
