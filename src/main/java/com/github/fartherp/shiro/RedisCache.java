@@ -15,20 +15,16 @@
  */
 package com.github.fartherp.shiro;
 
-import com.github.fartherp.shiro.exception.CacheManagerPrincipalIdNotAssignedException;
-import com.github.fartherp.shiro.exception.PrincipalIdNullException;
-import com.github.fartherp.shiro.exception.PrincipalInstanceException;
+import com.github.fartherp.shiro.exception.CachePrincipalNotImplementsAssignedException;
+import com.github.fartherp.shiro.exception.PrincipalNullException;
 import org.apache.shiro.cache.Cache;
 import org.apache.shiro.cache.CacheException;
 import org.apache.shiro.subject.PrincipalCollection;
-import org.apache.shiro.util.StringUtils;
 import org.redisson.api.RBucket;
 import org.redisson.api.RScoredSortedSet;
 import org.redisson.client.codec.Codec;
 import org.redisson.client.protocol.ScoredEntry;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -43,7 +39,7 @@ import java.util.stream.Collectors;
 import static com.github.fartherp.shiro.Constant.SECONDS;
 
 /**
- * Created by IntelliJ IDEA.
+ * shiro cache 操作.
  *
  * @author CK
  * @date 2018/12/29
@@ -73,54 +69,25 @@ public class RedisCache<K, V> implements Cache<K, V> {
     }
 
     private String getRedisCacheKey(K key) {
-        if (key == null) {
-            return null;
-        }
-        String redisKey;
+        StringBuilder sb = new StringBuilder(this.cacheKeyPrefix);
+		sb.append(':');
         if (key instanceof PrincipalCollection) {
-            redisKey = getRedisKeyFromPrincipalIdField((PrincipalCollection) key);
+			sb.append(getRedisKeyFromPrincipalUnique((PrincipalCollection) key));
         } else {
-            redisKey = key.toString();
+			sb.append(key);
         }
-        return this.cacheKeyPrefix + ":" + redisKey;
+        return sb.toString();
     }
 
-    private String getRedisKeyFromPrincipalIdField(PrincipalCollection key) {
+    private String getRedisKeyFromPrincipalUnique(PrincipalCollection key) {
         Object principalObject = key.getPrimaryPrincipal();
-        Method pincipalIdGetter = getPrincipalIdGetter(principalObject);
-        return getIdObj(principalObject, pincipalIdGetter);
-    }
-
-    private String getIdObj(Object principalObject, Method pincipalIdGetter) {
-        try {
-            Object idObj = pincipalIdGetter.invoke(principalObject);
-            if (idObj == null) {
-                throw new PrincipalIdNullException(principalObject.getClass(),
-					redisCacheManager.getPrincipalIdFieldName());
-            }
-            return idObj.toString();
-        } catch (IllegalAccessException | InvocationTargetException e) {
-            throw new PrincipalInstanceException(principalObject.getClass(),
-				redisCacheManager.getPrincipalIdFieldName(), e);
-        }
-    }
-
-    private Method getPrincipalIdGetter(Object principalObject) {
-        String principalIdMethodName = this.getPrincipalIdMethodName();
-        try {
-			return principalObject.getClass().getMethod(principalIdMethodName);
-        } catch (NoSuchMethodException e) {
-            throw new PrincipalInstanceException(principalObject.getClass(),
-				redisCacheManager.getPrincipalIdFieldName());
-        }
-    }
-
-    private String getPrincipalIdMethodName() {
-    	String principalIdFieldName = redisCacheManager.getPrincipalIdFieldName();
-        if (!StringUtils.hasText(principalIdFieldName)) {
-            throw new CacheManagerPrincipalIdNotAssignedException();
-        }
-        return "get" + principalIdFieldName.substring(0, 1).toUpperCase() + principalIdFieldName.substring(1);
+		if (principalObject == null) {
+			throw new PrincipalNullException();
+		}
+        if (principalObject instanceof ShiroFieldAccess) {
+        	return ((ShiroFieldAccess) principalObject).unique();
+		}
+		throw new CachePrincipalNotImplementsAssignedException(principalObject.getClass());
     }
 
 	@SuppressWarnings("unchecked")

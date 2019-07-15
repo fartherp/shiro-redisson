@@ -26,14 +26,12 @@ import org.redisson.client.codec.Codec;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import static com.github.fartherp.shiro.CodecType.FST_CODEC;
 import static com.github.fartherp.shiro.Constant.DEFAULT_CACHE_KEY_PREFIX;
-import static com.github.fartherp.shiro.Constant.DEFAULT_PRINCIPAL_ID_FIELD_NAME;
 import static com.github.fartherp.shiro.Constant.DEFAULT_REDISSON_LRU_OBJ_CAPACITY;
 import static com.github.fartherp.shiro.Constant.THIRTY_MINUTES;
 
 /**
- * Created by IntelliJ IDEA.
+ * shiro cache manager.
  *
  * @author CK
  * @date 2019/1/1
@@ -43,8 +41,6 @@ public class RedisCacheManager implements CacheManager {
     private final ConcurrentMap<String, Cache> caches = new ConcurrentHashMap<>();
 
     private final String keyPrefix;
-
-    private final String principalIdFieldName;
 
 	/**
 	 * 毫秒
@@ -60,22 +56,19 @@ public class RedisCacheManager implements CacheManager {
     private final RedissonClient redissonClient;
 
     public RedisCacheManager(RedissonClient redissonClient) {
-        this(redissonClient, DEFAULT_CACHE_KEY_PREFIX, DEFAULT_PRINCIPAL_ID_FIELD_NAME,
-			THIRTY_MINUTES, DEFAULT_REDISSON_LRU_OBJ_CAPACITY, FST_CODEC, FST_CODEC);
+        this(redissonClient, DEFAULT_CACHE_KEY_PREFIX, THIRTY_MINUTES,
+			DEFAULT_REDISSON_LRU_OBJ_CAPACITY, CodecType.FST_CODEC, CodecType.FST_CODEC);
     }
 
-    public RedisCacheManager(RedissonClient redissonClient, String keyPrefix,
-							 String principalIdFieldName, long ttl,
-							 int cacheLruSize, CodecType cacheCodecType,
-							 CodecType cacheKeysCodecType) {
+    public RedisCacheManager(RedissonClient redissonClient, String keyPrefix, long ttl,
+			int cacheLruSize, CodecType cacheCodecType, CodecType cacheKeysCodecType) {
     	this.redissonClient = redissonClient;
         this.keyPrefix = StringUtils.hasText(keyPrefix) ? keyPrefix : DEFAULT_CACHE_KEY_PREFIX;
-        this.principalIdFieldName = StringUtils.hasText(principalIdFieldName)
-			? principalIdFieldName : DEFAULT_PRINCIPAL_ID_FIELD_NAME;
         this.ttl = ttl > 0 ? ttl : THIRTY_MINUTES;
         this.cacheLruSize = cacheLruSize > 0 ? cacheLruSize : DEFAULT_REDISSON_LRU_OBJ_CAPACITY;
-        this.cacheCodec = cacheCodecType != null ? cacheCodecType.getCodec() : FST_CODEC.getCodec();
-        this.cacheKeysCodec = cacheKeysCodecType != null ? cacheKeysCodecType.getCodec() : FST_CODEC.getCodec();
+        this.cacheCodec = cacheCodecType != null ? cacheCodecType.getCodec() : CodecType.FST_CODEC.getCodec();
+        this.cacheKeysCodec = cacheKeysCodecType != null ? cacheKeysCodecType.getCodec()
+			: CodecType.FST_CODEC.getCodec();
     }
 
     @SuppressWarnings("all")
@@ -92,10 +85,6 @@ public class RedisCacheManager implements CacheManager {
 
 	public ConcurrentMap<String, Cache> getCaches() {
 		return caches;
-	}
-
-	public String getPrincipalIdFieldName() {
-		return principalIdFieldName;
 	}
 
     public long getTtl() {

@@ -19,8 +19,6 @@ import org.apache.shiro.cache.Cache;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import static com.github.fartherp.shiro.Constant.DEFAULT_CACHE_KEY_PREFIX;
-import static com.github.fartherp.shiro.Constant.DEFAULT_PRINCIPAL_ID_FIELD_NAME;
 import static com.github.fartherp.shiro.Constant.THIRTY_MINUTES;
 import static org.testng.Assert.*;
 
@@ -54,11 +52,6 @@ public class RedisCacheManagerTest extends BaseTest {
     @Test
     public void testGetTtl() {
         assertEquals(redisCacheManager.getTtl(), THIRTY_MINUTES);
-    }
-
-    @Test
-    public void testGetPrincipalIdFieldName() {
-        assertEquals(redisCacheManager.getPrincipalIdFieldName(), DEFAULT_PRINCIPAL_ID_FIELD_NAME);
     }
 
     @Test

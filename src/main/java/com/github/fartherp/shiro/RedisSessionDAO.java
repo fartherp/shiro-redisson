@@ -41,12 +41,11 @@ import java.util.function.Function;
 
 import static com.github.fartherp.shiro.Constant.DEFAULT_REDISSON_LRU_OBJ_CAPACITY;
 import static com.github.fartherp.shiro.Constant.DEFAULT_SESSION_IN_MEMORY_ENABLED;
-import static com.github.fartherp.shiro.Constant.DEFAULT_SESSION_IN_MEMORY_TIMEOUT;
 import static com.github.fartherp.shiro.Constant.DEFAULT_SESSION_KEY_PREFIX;
 import static com.github.fartherp.shiro.Constant.SECONDS;
 
 /**
- * Created by IntelliJ IDEA.
+ * shiro session 操作.
  *
  * @author CK
  * @date 2019/1/1
@@ -79,8 +78,7 @@ public class RedisSessionDAO extends AbstractSessionDAO {
 
 	public RedisSessionDAO(RedisCacheManager redisCacheManager) {
 		this(redisCacheManager, DEFAULT_SESSION_KEY_PREFIX, ExpireType.DEFAULT_EXPIRE,
-			DEFAULT_SESSION_IN_MEMORY_ENABLED, DEFAULT_SESSION_IN_MEMORY_TIMEOUT,
-			CodecType.FST_CODEC, DEFAULT_REDISSON_LRU_OBJ_CAPACITY);
+			DEFAULT_SESSION_IN_MEMORY_ENABLED, SECONDS, CodecType.FST_CODEC, DEFAULT_REDISSON_LRU_OBJ_CAPACITY);
 	}
 
     public RedisSessionDAO(RedisCacheManager redisCacheManager, String sessionKeyPrefix,
@@ -92,7 +90,7 @@ public class RedisSessionDAO extends AbstractSessionDAO {
         this.expire = expireType != null ? expireType.type : ExpireType.DEFAULT_EXPIRE.type;
         this.sessionInMemoryEnabled = sessionInMemoryEnabled;
         this.sessionInMemoryTimeout = sessionInMemoryTimeout > 0
-			? sessionInMemoryTimeout : DEFAULT_SESSION_IN_MEMORY_TIMEOUT;
+			? sessionInMemoryTimeout : SECONDS;
         this.codec = codecType != null ? codecType.getCodec() : CodecType.FST_CODEC.getCodec();
 		int tmpSessionLruSize = sessionLruSize > 0 ? sessionLruSize : DEFAULT_REDISSON_LRU_OBJ_CAPACITY;
 		this.lruMap = new LinkedHashMap<String, Object>(tmpSessionLruSize, 0.75F, true) {
@@ -106,7 +104,7 @@ public class RedisSessionDAO extends AbstractSessionDAO {
 		this.sessionKeys = this.redisCacheManager.getRedissonClient()
 			.getScoredSortedSet(this.sessionKeyPrefix, CodecType.STRING_CODEC.getCodec());
         this.clearCache = new ClearCache(this);
-        this.clearCache.init();
+        this.clearCache.run();
     }
 
 	@SuppressWarnings("unchecked")

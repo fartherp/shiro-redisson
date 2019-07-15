@@ -27,7 +27,7 @@ import java.util.Date;
 import java.util.Map;
 
 /**
- * Created by IntelliJ IDEA.
+ * session信息封装.
  *
  * @author CK
  * @date 2019/2/1
@@ -202,7 +202,7 @@ public class SessionWrapper implements Serializable {
         }
     }
 
-    static int bitIndexCounter = 0;
+    private static int bitIndexCounter = 0;
     private static final int ID_BIT_MASK = 1 << bitIndexCounter++;
     private static final int START_TIMESTAMP_BIT_MASK = 1 << bitIndexCounter++;
     private static final int STOP_TIMESTAMP_BIT_MASK = 1 << bitIndexCounter++;

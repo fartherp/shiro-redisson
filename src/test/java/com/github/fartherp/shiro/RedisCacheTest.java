@@ -22,7 +22,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.io.Serializable;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -30,7 +29,6 @@ import java.util.Set;
 
 import static com.github.fartherp.shiro.CodecType.JSON_JACKSON_CODEC;
 import static com.github.fartherp.shiro.Constant.DEFAULT_CACHE_KEY_PREFIX;
-import static com.github.fartherp.shiro.Constant.DEFAULT_PRINCIPAL_ID_FIELD_NAME;
 import static com.github.fartherp.shiro.Constant.DEFAULT_REDISSON_LRU_OBJ_CAPACITY;
 import static com.github.fartherp.shiro.Constant.THIRTY_MINUTES;
 import static org.testng.Assert.*;
@@ -49,7 +47,7 @@ public class RedisCacheTest extends BaseTest {
 	@BeforeMethod
 	public void setUp() {
 		super.setUp();
-		redisCacheManager = new RedisCacheManager(redissonClient, DEFAULT_CACHE_KEY_PREFIX, DEFAULT_PRINCIPAL_ID_FIELD_NAME,
+		redisCacheManager = new RedisCacheManager(redissonClient, DEFAULT_CACHE_KEY_PREFIX,
 			THIRTY_MINUTES, DEFAULT_REDISSON_LRU_OBJ_CAPACITY, JSON_JACKSON_CODEC, JSON_JACKSON_CODEC);
 		redisCache = (RedisCache) redisCacheManager.getCache("test_tmp_redis_cache");
 	}
@@ -102,6 +100,29 @@ public class RedisCacheTest extends BaseTest {
 		assertEquals(result, value);
 	}
 
+	@Test
+	public void testPrincipalObjectNullPut() {
+		PrincipalCollection a = new SimplePrincipalCollection();
+		try {
+			redisCache.put(a, "111111");
+		} catch (Exception e) {
+			assertEquals(e.getMessage(), "Principal shouldn't be null!");
+		}
+	}
+
+	@Test
+	public void testNoImplementsShiroFieldAccessPut() {
+		UserBase user = new UserBase();
+		user.setId(1);
+		PrincipalCollection a = new SimplePrincipalCollection(user, "张三");
+		try {
+			redisCache.put(a, "111111");
+		} catch (Exception e) {
+			assertEquals(e.getMessage(), "Principal class com.github.fartherp.shiro.RedisCacheTest$UserBase " +
+				"must implements com.github.fartherp.shiro.ShiroFieldAccess!");
+		}
+	}
+
     @Test
     public void testSize() {
 		putAll();
@@ -112,6 +133,12 @@ public class RedisCacheTest extends BaseTest {
 	public void testPrincipalCollectionSize() {
 		putPrincipalCollectionAll();
 		assertEquals(redisCache.size(), 3);
+	}
+
+	@Test
+	public void testKeyNullGet() {
+		String result = redisCache.get(null);
+		assertNull(result);
 	}
 
     @Test
@@ -172,13 +199,6 @@ public class RedisCacheTest extends BaseTest {
         assertEquals(redisCache.getCacheKeys().size(), 0);
     }
 
-    @Test
-    public void testPincipalIdGetter() throws Exception {
-        User user = new User();
-        Method pincipalIdGetter = user.getClass().getMethod("getId");
-        assertNotNull(pincipalIdGetter);
-    }
-
     public static class UserBase implements Serializable {
         private Integer id;
 
@@ -191,7 +211,11 @@ public class RedisCacheTest extends BaseTest {
         }
     }
 
-    public static class User extends UserBase {
+    public static class User extends UserBase implements ShiroFieldAccess {
 
-    }
+		@Override
+		public String unique() {
+			return getId().toString();
+		}
+	}
 }

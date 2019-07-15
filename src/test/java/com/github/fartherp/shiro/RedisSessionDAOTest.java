@@ -18,6 +18,7 @@ package com.github.fartherp.shiro;
 import org.apache.shiro.session.Session;
 import org.apache.shiro.session.UnknownSessionException;
 import org.apache.shiro.session.mgt.SimpleSession;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -25,7 +26,16 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.UUID;
 
+import static com.github.fartherp.shiro.CodecType.FST_CODEC;
+import static com.github.fartherp.shiro.CodecType.JSON_JACKSON_CODEC;
+import static com.github.fartherp.shiro.Constant.DEFAULT_CACHE_KEY_PREFIX;
+import static com.github.fartherp.shiro.Constant.DEFAULT_REDISSON_LRU_OBJ_CAPACITY;
+import static com.github.fartherp.shiro.Constant.DEFAULT_SESSION_IN_MEMORY_ENABLED;
 import static com.github.fartherp.shiro.Constant.DEFAULT_SESSION_KEY_PREFIX;
+import static com.github.fartherp.shiro.Constant.SECONDS;
+import static com.github.fartherp.shiro.Constant.THIRTY_MINUTES;
+import static com.github.fartherp.shiro.ExpireType.CUSTOM_EXPIRE;
+import static com.github.fartherp.shiro.ExpireType.NO_EXPIRE;
 import static org.testng.Assert.*;
 
 /**
@@ -38,10 +48,17 @@ public class RedisSessionDAOTest extends BaseTest {
 
     private RedisSessionDAO redisSessionDAO;
 
+	private SimpleSession simpleSession;
+
 	@BeforeMethod
 	public void setUp() {
 		super.setUp();
 		redisSessionDAO = new RedisSessionDAO(redisCacheManager);
+	}
+
+	@AfterMethod
+	public void tearDown() {
+		redisSessionDAO.delete(simpleSession);
 	}
 
     @Test(expectedExceptions = UnknownSessionException.class)
@@ -51,28 +68,25 @@ public class RedisSessionDAOTest extends BaseTest {
 
     @Test
     public void testDoCreate() {
-        SimpleSession simpleSession = generateSimpleSession();
+        simpleSession = generateSimpleSession();
         Serializable serializable = redisSessionDAO.doCreate(simpleSession);
         assertNotNull(serializable);
-        redisSessionDAO.delete(simpleSession);
     }
 
     @Test
     public void testGetActiveSessions() {
-        SimpleSession simpleSession = generateSimpleSession();
+        simpleSession = generateSimpleSession();
         redisSessionDAO.doCreate(simpleSession);
         Collection<Session> sessions = redisSessionDAO.getActiveSessions();
         assertEquals(sessions.size(), 1);
-        redisSessionDAO.delete(simpleSession);
     }
 
     @Test
     public void testDoReadSession() {
-        SimpleSession simpleSession = generateSimpleSession();
+        simpleSession = generateSimpleSession();
         Serializable serializable = redisSessionDAO.doCreate(simpleSession);
         SimpleSession session = (SimpleSession) redisSessionDAO.doReadSession(serializable);
         assertEquals(session.getId(), simpleSession.getId());
-        redisSessionDAO.delete(simpleSession);
     }
 
     @Test
@@ -89,44 +103,75 @@ public class RedisSessionDAOTest extends BaseTest {
 
     @Test
     public void testRepeatDoReadSession() {
-        SimpleSession simpleSession = generateSimpleSession();
+        simpleSession = generateSimpleSession();
         Serializable serializable = redisSessionDAO.doCreate(simpleSession);
         SimpleSession session = (SimpleSession) redisSessionDAO.doReadSession(serializable);
         assertEquals(session.getId(), simpleSession.getId());
         SimpleSession session1 = (SimpleSession) redisSessionDAO.doReadSession(serializable);
         assertEquals(session1.getId(), simpleSession.getId());
-        redisSessionDAO.delete(simpleSession);
     }
 
     @Test
     public void testRepeatGt1000DoReadSession() throws Exception {
-        SimpleSession simpleSession = generateSimpleSession();
+        simpleSession = generateSimpleSession();
         Serializable serializable = redisSessionDAO.doCreate(simpleSession);
         SimpleSession session = (SimpleSession) redisSessionDAO.doReadSession(serializable);
         assertEquals(session.getId(), simpleSession.getId());
         Thread.sleep(1500);
         SimpleSession session1 = (SimpleSession) redisSessionDAO.doReadSession(serializable);
         assertEquals(session1.getId(), simpleSession.getId());
-        redisSessionDAO.delete(simpleSession);
     }
+
+	@Test
+	public void testCustomExpireRepeatGt1000DoReadSession() throws Exception {
+		redisCacheManager = new RedisCacheManager(redissonClient, DEFAULT_CACHE_KEY_PREFIX,
+			SECONDS, DEFAULT_REDISSON_LRU_OBJ_CAPACITY, FST_CODEC, FST_CODEC);
+		redisSessionDAO = new RedisSessionDAO(redisCacheManager, DEFAULT_SESSION_KEY_PREFIX,
+			CUSTOM_EXPIRE, DEFAULT_SESSION_IN_MEMORY_ENABLED, SECONDS, JSON_JACKSON_CODEC,
+			DEFAULT_REDISSON_LRU_OBJ_CAPACITY);
+
+		simpleSession = generateSimpleSession();
+		Serializable serializable = redisSessionDAO.doCreate(simpleSession);
+		SimpleSession session = (SimpleSession) redisSessionDAO.doReadSession(serializable);
+		assertEquals(session.getId(), simpleSession.getId());
+		Thread.sleep(1500);
+		SimpleSession session1 = (SimpleSession) redisSessionDAO.doReadSession(serializable);
+		assertNull(session1);
+	}
+
+	@Test
+	public void testNoExpireRepeatGt1000DoReadSession() throws Exception {
+		redisCacheManager = new RedisCacheManager(redissonClient, DEFAULT_CACHE_KEY_PREFIX,
+			THIRTY_MINUTES, DEFAULT_REDISSON_LRU_OBJ_CAPACITY, FST_CODEC, FST_CODEC);
+		redisSessionDAO = new RedisSessionDAO(redisCacheManager, DEFAULT_SESSION_KEY_PREFIX,
+			NO_EXPIRE, DEFAULT_SESSION_IN_MEMORY_ENABLED, SECONDS, JSON_JACKSON_CODEC,
+			DEFAULT_REDISSON_LRU_OBJ_CAPACITY);
+
+		simpleSession = generateSimpleSession();
+		Serializable serializable = redisSessionDAO.doCreate(simpleSession);
+		SimpleSession session = (SimpleSession) redisSessionDAO.doReadSession(serializable);
+		assertEquals(session.getId(), simpleSession.getId());
+		Thread.sleep(1500);
+		SimpleSession session1 = (SimpleSession) redisSessionDAO.doReadSession(serializable);
+		assertEquals(session1.getId(), session.getId());
+	}
 
     @Test(expectedExceptions = UnknownSessionException.class)
     public void testExceptionUpdate() {
-        SimpleSession simpleSession = generateSimpleSession();
+        simpleSession = generateSimpleSession();
         redisSessionDAO.update(simpleSession);
     }
 
     @Test
     public void testUpdate() {
-        SimpleSession simpleSession = generateSimpleSession();
+        simpleSession = generateSimpleSession();
         simpleSession.setId(UUID.randomUUID().toString());
         redisSessionDAO.update(simpleSession);
-        redisSessionDAO.delete(simpleSession);
     }
 
     @Test
     public void testDelete() {
-        SimpleSession simpleSession = new SimpleSession();
+        simpleSession = new SimpleSession();
         redisSessionDAO.delete(simpleSession);
     }
 

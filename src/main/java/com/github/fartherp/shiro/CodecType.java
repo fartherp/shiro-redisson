@@ -33,7 +33,7 @@ import org.redisson.codec.SnappyCodec;
 import org.redisson.codec.SnappyCodecV2;
 
 /**
- * Created by IntelliJ IDEA.
+ * Redisson编码.
  *
  * @author CK
  * @date 2019/1/31

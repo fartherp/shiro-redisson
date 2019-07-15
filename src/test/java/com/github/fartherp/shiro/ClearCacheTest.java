@@ -21,7 +21,6 @@ import org.testng.annotations.Test;
 
 import static com.github.fartherp.shiro.CodecType.JSON_JACKSON_CODEC;
 import static com.github.fartherp.shiro.Constant.DEFAULT_CACHE_KEY_PREFIX;
-import static com.github.fartherp.shiro.Constant.DEFAULT_PRINCIPAL_ID_FIELD_NAME;
 import static com.github.fartherp.shiro.Constant.DEFAULT_REDISSON_LRU_OBJ_CAPACITY;
 import static com.github.fartherp.shiro.Constant.SECONDS;
 
@@ -41,8 +40,7 @@ public class ClearCacheTest extends BaseTest {
 	public void setUp() {
 		super.setUp();
 		redisCacheManager = new RedisCacheManager(redissonClient, DEFAULT_CACHE_KEY_PREFIX,
-			DEFAULT_PRINCIPAL_ID_FIELD_NAME, SECONDS, DEFAULT_REDISSON_LRU_OBJ_CAPACITY,
-			JSON_JACKSON_CODEC, JSON_JACKSON_CODEC);
+			SECONDS, DEFAULT_REDISSON_LRU_OBJ_CAPACITY, JSON_JACKSON_CODEC, JSON_JACKSON_CODEC);
 		redisSessionDAO = new RedisSessionDAO(redisCacheManager);
 		clearCache = new ClearCache(redisSessionDAO);
 	}

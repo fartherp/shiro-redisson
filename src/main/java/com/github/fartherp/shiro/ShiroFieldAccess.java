@@ -13,19 +13,25 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package com.github.fartherp.shiro.exception;
+package com.github.fartherp.shiro;
+
+import java.io.Serializable;
 
 /**
- * Created by IntelliJ IDEA.
+ * <pre>
+ * 实际 {@link org.apache.shiro.subject.PrincipalCollection#getPrimaryPrincipal()} 需要实现的接口.
+ * 给出存在redis里唯一数据信息，如：mysql中主键.
+ * </pre>
  *
  * @author CK
- * @date 2019/1/31
+ * @date 2019/7/15
  */
-public class PrincipalIdNullException extends RuntimeException  {
+public interface ShiroFieldAccess extends Cloneable, Serializable {
 
-    private static final String MESSAGE = "Principal Id shouldn't be null!";
-
-    public PrincipalIdNullException(Class clazz, String idMethodName) {
-        super(clazz + " id field: " +  idMethodName + ", value is null\n" + MESSAGE);
-    }
+	/**
+	 * get unique value
+	 *
+	 * @return unique value
+	 */
+	String unique();
 }

@@ -16,22 +16,22 @@
 package com.github.fartherp.shiro;
 
 /**
- * Created by IntelliJ IDEA.
+ * session过期类型
  *
  * @author CK
  * @date 2019/1/14
  */
 public enum ExpireType {
 	/**
-	 * session默认过期
+	 * 默认过期
 	 */
     DEFAULT_EXPIRE(-3),
 	/**
-	 * session自定义过期
+	 * 自定义过期
 	 */
 	CUSTOM_EXPIRE(-2),
 	/**
-	 * session不过期
+	 * 不过期
 	 */
     NO_EXPIRE(-1);
     int type;

@@ -21,6 +21,7 @@ import org.redisson.api.RedissonClient;
 import org.redisson.client.codec.StringCodec;
 import org.redisson.config.Config;
 import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 
 import java.util.Date;
 
@@ -38,6 +39,7 @@ public abstract class BaseTest {
 
     public RedisCacheManager redisCacheManager;
 
+	@BeforeMethod
 	public void setUp() {
 		Config config = new Config();
 		config.setCodec(new StringCodec()).useSingleServer().setAddress("redis://127.0.0.1:6379");

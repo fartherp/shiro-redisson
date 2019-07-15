@@ -29,7 +29,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * Created by IntelliJ IDEA.
+ * 冗余结构数据删除.
  *
  * @author CK
  * @date 2019/1/4
@@ -43,7 +43,9 @@ public class ClearCache implements TimerTask {
         this.redisSessionDAO = redisSessionDAO;
     }
 
-    public void init() {
+    public void run() {
+		clearSession();
+		clearCache();
         hashedWheelTimer.newTimeout(this, redisSessionDAO.getRedisCacheManager().getTtl(), TimeUnit.MILLISECONDS);
     }
 
@@ -74,8 +76,6 @@ public class ClearCache implements TimerTask {
 
     @Override
     public void run(Timeout timeout) throws Exception {
-        clearSession();
-        clearCache();
-        init();
+        run();
     }
 }

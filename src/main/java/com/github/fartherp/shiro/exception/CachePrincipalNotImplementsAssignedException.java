@@ -21,11 +21,13 @@ package com.github.fartherp.shiro.exception;
  * @author CK
  * @date 2019/1/31
  */
-public class CacheManagerPrincipalIdNotAssignedException extends RuntimeException  {
+public class CachePrincipalNotImplementsAssignedException extends RuntimeException {
 
-    private static final String MESSAGE = "CacheManager didn't assign Principal Id field name!";
+	private static final long serialVersionUID = -6914915272655633632L;
 
-    public CacheManagerPrincipalIdNotAssignedException() {
-        super(MESSAGE);
+    private static final String MESSAGE = "Principal %s must implements com.github.fartherp.shiro.ShiroFieldAccess!";
+
+	public CachePrincipalNotImplementsAssignedException(Class clazz) {
+        super(String.format(MESSAGE, clazz));
     }
 }
