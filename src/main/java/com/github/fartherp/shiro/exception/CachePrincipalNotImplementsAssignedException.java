@@ -25,7 +25,7 @@ public class CachePrincipalNotImplementsAssignedException extends RuntimeExcepti
 
 	private static final long serialVersionUID = -6914915272655633632L;
 
-    private static final String MESSAGE = "Principal %s must implements com.github.fartherp.shiro.ShiroFieldAccess!";
+    private static final String MESSAGE = "Principal %s must implements com.github.fartherp.shiro.ShiroFieldAccess";
 
 	public CachePrincipalNotImplementsAssignedException(Class clazz) {
         super(String.format(MESSAGE, clazz));

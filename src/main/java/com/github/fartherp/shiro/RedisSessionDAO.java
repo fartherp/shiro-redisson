@@ -78,7 +78,8 @@ public class RedisSessionDAO extends AbstractSessionDAO {
 
 	public RedisSessionDAO(RedisCacheManager redisCacheManager) {
 		this(redisCacheManager, DEFAULT_SESSION_KEY_PREFIX, ExpireType.DEFAULT_EXPIRE,
-			DEFAULT_SESSION_IN_MEMORY_ENABLED, SECONDS, CodecType.FST_CODEC, DEFAULT_REDISSON_LRU_OBJ_CAPACITY);
+			DEFAULT_SESSION_IN_MEMORY_ENABLED, SECONDS, CodecType.FST_CODEC,
+			DEFAULT_REDISSON_LRU_OBJ_CAPACITY);
 	}
 
     public RedisSessionDAO(RedisCacheManager redisCacheManager, String sessionKeyPrefix,

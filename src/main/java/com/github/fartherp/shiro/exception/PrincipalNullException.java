@@ -25,7 +25,7 @@ public class PrincipalNullException extends RuntimeException {
 
 	private static final long serialVersionUID = -7451814784877671981L;
 
-    private static final String MESSAGE = "Principal shouldn't be null!";
+    private static final String MESSAGE = "Principal shouldn't be null";
 
 	public PrincipalNullException() {
 		super(MESSAGE);
