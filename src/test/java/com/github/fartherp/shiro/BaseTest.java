@@ -23,6 +23,7 @@ import org.redisson.config.Config;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
+import java.io.Serializable;
 import java.util.Date;
 
 import static com.github.fartherp.shiro.Constant.THIRTY_MINUTES;
@@ -65,4 +66,24 @@ public abstract class BaseTest {
 		simpleSession.setAttribute("simpleSession", "simpleSession");
         return simpleSession;
     }
+
+	public static class UserBase implements Serializable {
+		private Integer id;
+
+		public Integer getId() {
+			return id;
+		}
+
+		public void setId(Integer id) {
+			this.id = id;
+		}
+	}
+
+	public static class User extends RedisCacheTest.UserBase implements ShiroFieldAccess {
+
+		@Override
+		public String unique() {
+			return getId().toString();
+		}
+	}
 }

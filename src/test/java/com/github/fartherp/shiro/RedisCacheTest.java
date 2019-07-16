@@ -21,7 +21,6 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -106,7 +105,7 @@ public class RedisCacheTest extends BaseTest {
 		try {
 			redisCache.put(a, "111111");
 		} catch (Exception e) {
-			assertEquals(e.getMessage(), "Principal shouldn't be null!");
+			assertEquals(e.getMessage(), "Principal shouldn't be null");
 		}
 	}
 
@@ -119,7 +118,7 @@ public class RedisCacheTest extends BaseTest {
 			redisCache.put(a, "111111");
 		} catch (Exception e) {
 			assertEquals(e.getMessage(), "Principal class com.github.fartherp.shiro.RedisCacheTest$UserBase " +
-				"must implements com.github.fartherp.shiro.ShiroFieldAccess!");
+				"must implements com.github.fartherp.shiro.ShiroFieldAccess");
 		}
 	}
 
@@ -198,24 +197,4 @@ public class RedisCacheTest extends BaseTest {
         redisCache.clear();
         assertEquals(redisCache.getCacheKeys().size(), 0);
     }
-
-    public static class UserBase implements Serializable {
-        private Integer id;
-
-        public Integer getId() {
-            return id;
-        }
-
-        public void setId(Integer id) {
-            this.id = id;
-        }
-    }
-
-    public static class User extends UserBase implements ShiroFieldAccess {
-
-		@Override
-		public String unique() {
-			return getId().toString();
-		}
-	}
 }
