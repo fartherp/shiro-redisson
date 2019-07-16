@@ -117,7 +117,7 @@ public class RedisCacheTest extends BaseTest {
 		try {
 			redisCache.put(a, "111111");
 		} catch (Exception e) {
-			assertEquals(e.getMessage(), "Principal class com.github.fartherp.shiro.RedisCacheTest$UserBase " +
+			assertEquals(e.getMessage(), "Principal class com.github.fartherp.shiro.BaseTest$UserBase " +
 				"must implements com.github.fartherp.shiro.ShiroFieldAccess");
 		}
 	}
