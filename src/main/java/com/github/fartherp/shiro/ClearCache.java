@@ -23,7 +23,7 @@ import org.redisson.api.RScoredSortedSet;
 import org.redisson.client.protocol.ScoredEntry;
 
 import java.util.List;
-import java.util.concurrent.ConcurrentMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -35,33 +35,38 @@ import java.util.stream.Collectors;
  * @date 2019/1/4
  */
 public class ClearCache implements TimerTask {
+
+	/**
+	 * netty时间轮
+	 */
     private final HashedWheelTimer hashedWheelTimer = new HashedWheelTimer();
 
     private final RedisSessionDAO redisSessionDAO;
 
-    public ClearCache(RedisSessionDAO redisSessionDAO) {
+    ClearCache(RedisSessionDAO redisSessionDAO) {
         this.redisSessionDAO = redisSessionDAO;
     }
 
-    public void run() {
-		clearSession();
-		clearCache();
+    void run() {
+		long currentTimeMillis = System.currentTimeMillis();
+		clearSession(currentTimeMillis);
+		clearCache(currentTimeMillis);
         hashedWheelTimer.newTimeout(this, redisSessionDAO.getRedisCacheManager().getTtl(), TimeUnit.MILLISECONDS);
     }
 
     @SuppressWarnings("unchecked")
-    public void clearSession() {
+	void clearSession(long currentTimeMillis) {
         RScoredSortedSet<String> sessionKeys = redisSessionDAO.getSessionKeys();
-        removeAll(sessionKeys, o -> (List<ScoredEntry>) o.entryRange(0, false, System.currentTimeMillis(), true));
+        removeAll(sessionKeys, o -> (List<ScoredEntry>) o.entryRange(0, false, currentTimeMillis, true));
     }
 
     @SuppressWarnings("unchecked")
-    public void clearCache() {
-        ConcurrentMap<String, Cache> caches = redisSessionDAO.getRedisCacheManager().getCaches();
+	void clearCache(long currentTimeMillis) {
+        Map<String, Cache> caches = redisSessionDAO.getRedisCacheManager().getCaches();
         caches.forEach((k, v) -> {
             RedisCache redisCache = (RedisCache) v;
             RScoredSortedSet cacheKeys = redisCache.getCacheKeys();
-            removeAll(cacheKeys, o -> (List<ScoredEntry>) o.entryRange(0, false, System.currentTimeMillis(), true));
+            removeAll(cacheKeys, o -> (List<ScoredEntry>) o.entryRange(0, false, currentTimeMillis, true));
         });
     }
 

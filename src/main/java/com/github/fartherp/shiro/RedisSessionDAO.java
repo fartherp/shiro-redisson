@@ -15,6 +15,8 @@
  */
 package com.github.fartherp.shiro;
 
+import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
+import com.googlecode.concurrentlinkedhashmap.Weighers;
 import io.netty.util.concurrent.FastThreadLocal;
 import org.apache.shiro.session.Session;
 import org.apache.shiro.session.UnknownSessionException;
@@ -32,7 +34,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -42,6 +43,7 @@ import java.util.function.Function;
 import static com.github.fartherp.shiro.Constant.DEFAULT_REDISSON_LRU_OBJ_CAPACITY;
 import static com.github.fartherp.shiro.Constant.DEFAULT_SESSION_IN_MEMORY_ENABLED;
 import static com.github.fartherp.shiro.Constant.DEFAULT_SESSION_KEY_PREFIX;
+import static com.github.fartherp.shiro.Constant.MILLISECONDS_NANO;
 import static com.github.fartherp.shiro.Constant.SECONDS;
 
 /**
@@ -52,15 +54,30 @@ import static com.github.fartherp.shiro.Constant.SECONDS;
  */
 public class RedisSessionDAO extends AbstractSessionDAO {
 
+	/**
+	 * session前缀
+	 */
     private final String sessionKeyPrefix;
 
-    private final int expire;
+	/**
+	 * 过期类型
+	 */
+	private final int expire;
 
+	/**
+	 * 本地缓存启用标志
+	 */
     private final boolean sessionInMemoryEnabled;
 
-    private final long sessionInMemoryTimeout;
+	/**
+	 * 本地缓存超时时间
+	 */
+	private final long sessionInMemoryTimeout;
 
-    private final Codec codec;
+	/**
+	 * session存储在redis编码
+	 */
+	private final Codec codec;
 
 	private static final FastThreadLocal<Map<Serializable, SessionWrapper>> SESSIONS_IN_THREAD;
 
@@ -84,24 +101,17 @@ public class RedisSessionDAO extends AbstractSessionDAO {
 
     public RedisSessionDAO(RedisCacheManager redisCacheManager, String sessionKeyPrefix,
 						   ExpireType expireType, boolean sessionInMemoryEnabled,
-						   long sessionInMemoryTimeout, CodecType codecType,
-						   int sessionLruSize) {
+						   long sessionInMemoryTimeout, CodecType codecType, int sessionLruSize) {
+		Assert.notNull(redisCacheManager, "redisCacheManager is no null");
         this.redisCacheManager = redisCacheManager;
         this.sessionKeyPrefix = StringUtils.hasText(sessionKeyPrefix) ? sessionKeyPrefix : DEFAULT_SESSION_KEY_PREFIX;
         this.expire = expireType != null ? expireType.type : ExpireType.DEFAULT_EXPIRE.type;
         this.sessionInMemoryEnabled = sessionInMemoryEnabled;
-        this.sessionInMemoryTimeout = sessionInMemoryTimeout > 0
-			? sessionInMemoryTimeout : SECONDS;
+        this.sessionInMemoryTimeout = sessionInMemoryTimeout > 0 ? sessionInMemoryTimeout : SECONDS;
         this.codec = codecType != null ? codecType.getCodec() : CodecType.FST_CODEC.getCodec();
 		int tmpSessionLruSize = sessionLruSize > 0 ? sessionLruSize : DEFAULT_REDISSON_LRU_OBJ_CAPACITY;
-		this.lruMap = new LinkedHashMap<String, Object>(tmpSessionLruSize, 0.75F, true) {
-			private static final long serialVersionUID = -7834112010389156278L;
-
-			@Override
-			protected boolean removeEldestEntry(Map.Entry<String, Object> eldest) {
-				return size() > tmpSessionLruSize;
-			}
-		};
+		this.lruMap = new ConcurrentLinkedHashMap.Builder<String, Object>()
+			.maximumWeightedCapacity(tmpSessionLruSize).weigher(Weighers.singleton()).build();
 		this.sessionKeys = this.redisCacheManager.getRedissonClient()
 			.getScoredSortedSet(this.sessionKeyPrefix, CodecType.STRING_CODEC.getCodec());
         this.clearCache = new ClearCache(this);
@@ -136,7 +146,6 @@ public class RedisSessionDAO extends AbstractSessionDAO {
         if (session == null || session.getId() == null) {
             throw new UnknownSessionException("session or session id is null");
         }
-        Assert.notNull(redisCacheManager, "redisCacheManager is no null");
 
         SessionWrapper sessionWrapper = new SessionWrapper();
         sessionWrapper.setSession(session);
@@ -147,13 +156,11 @@ public class RedisSessionDAO extends AbstractSessionDAO {
 		if (expire == ExpireType.DEFAULT_EXPIRE.type) {
 			long milliSeconds = sessionWrapper.getTimeout();
 			s.set(sessionWrapper, milliSeconds, TimeUnit.MILLISECONDS);
-			timestamp = LocalDateTimeUtilies
-				.getTimestamp(o -> o.plusNanos(milliSeconds * SECONDS * SECONDS));
+			timestamp = LocalDateTimeUtilies.getTimestamp(o -> o.plusNanos(milliSeconds * MILLISECONDS_NANO));
 		} else if (expire == ExpireType.CUSTOM_EXPIRE.type) {
 			long milliSeconds = redisCacheManager.getTtl();
 			s.set(sessionWrapper, milliSeconds, TimeUnit.MILLISECONDS);
-			timestamp = LocalDateTimeUtilies
-				.getTimestamp(o -> o.plusNanos(milliSeconds * SECONDS * SECONDS));
+			timestamp = LocalDateTimeUtilies.getTimestamp(o -> o.plusNanos(milliSeconds * MILLISECONDS_NANO));
 		} else {
 			s.set(sessionWrapper);
 			timestamp = Long.MAX_VALUE;
@@ -167,13 +174,9 @@ public class RedisSessionDAO extends AbstractSessionDAO {
             return null;
         }
         Session session;
-        if (this.sessionInMemoryEnabled) {
-            session = getSessionFromThreadLocal(sessionId);
-            if (session != null) {
-                return session;
-            }
+        if (this.sessionInMemoryEnabled && (session = getSessionFromThreadLocal(sessionId)) != null) {
+			return session;
         }
-        Assert.notNull(redisCacheManager, "redisCacheManager is no null");
 
         String key = getRedisSessionKey(sessionId);
         RBucket<SessionWrapper> s = getBucket(key);
@@ -197,19 +200,17 @@ public class RedisSessionDAO extends AbstractSessionDAO {
         if (session == null || session.getId() == null) {
             return;
         }
-        Assert.notNull(redisCacheManager, "redisCacheManager is no null");
-
-        RBucket<SessionWrapper> s = getBucket(getRedisSessionKey(session.getId()));
-        s.delete();
 
         String key = getRedisSessionKey(session.getId());
+
+        RBucket<SessionWrapper> s = getBucket(key);
+        s.delete();
+
 		sessionKeys.removeAsync(key);
     }
 
 	@Override
     public Collection<Session> getActiveSessions() {
-        Assert.notNull(redisCacheManager, "redisCacheManager is no null");
-
         // 获取存活的session
         List<ScoredEntry<String>> keys = (List<ScoredEntry<String>>) sessionKeys
 			.entryRange(System.currentTimeMillis(), false, Double.MAX_VALUE, true);

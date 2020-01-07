@@ -15,6 +15,8 @@
  */
 package com.github.fartherp.shiro;
 
+import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
+import com.googlecode.concurrentlinkedhashmap.Weighers;
 import org.apache.shiro.cache.Cache;
 import org.apache.shiro.cache.CacheException;
 import org.apache.shiro.cache.CacheManager;
@@ -23,8 +25,7 @@ import org.apache.shiro.util.StringUtils;
 import org.redisson.api.RedissonClient;
 import org.redisson.client.codec.Codec;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.Map;
 
 import static com.github.fartherp.shiro.Constant.DEFAULT_CACHE_KEY_PREFIX;
 import static com.github.fartherp.shiro.Constant.DEFAULT_REDISSON_LRU_OBJ_CAPACITY;
@@ -38,7 +39,7 @@ import static com.github.fartherp.shiro.Constant.THIRTY_MINUTES;
  */
 public class RedisCacheManager implements CacheManager {
 
-    private final ConcurrentMap<String, Cache> caches = new ConcurrentHashMap<>();
+    private final Map<String, Cache> caches;
 
     private final String keyPrefix;
 
@@ -47,6 +48,9 @@ public class RedisCacheManager implements CacheManager {
 	 */
 	private final long ttl;
 
+	/**
+	 * 缓存大小
+	 */
     private final int cacheLruSize;
 
     private final Codec cacheCodec;
@@ -62,6 +66,7 @@ public class RedisCacheManager implements CacheManager {
 
     public RedisCacheManager(RedissonClient redissonClient, String keyPrefix, long ttl,
 			int cacheLruSize, CodecType cacheCodecType, CodecType cacheKeysCodecType) {
+		Assert.notNull(redissonClient, "RedissonClient is no null");
     	this.redissonClient = redissonClient;
         this.keyPrefix = StringUtils.hasText(keyPrefix) ? keyPrefix : DEFAULT_CACHE_KEY_PREFIX;
         this.ttl = ttl > 0 ? ttl : THIRTY_MINUTES;
@@ -69,21 +74,18 @@ public class RedisCacheManager implements CacheManager {
         this.cacheCodec = cacheCodecType != null ? cacheCodecType.getCodec() : CodecType.FST_CODEC.getCodec();
         this.cacheKeysCodec = cacheKeysCodecType != null ? cacheKeysCodecType.getCodec()
 			: CodecType.FST_CODEC.getCodec();
+        this.caches = new ConcurrentLinkedHashMap.Builder<String, Cache>()
+			.maximumWeightedCapacity(this.cacheLruSize).weigher(Weighers.singleton()).build();
     }
 
     @SuppressWarnings("all")
 	@Override
     public <K, V> Cache<K, V> getCache(String name) throws CacheException {
-        Assert.notNull(redissonClient, "RedissonClient is no null");
-        Cache cache = caches.get(name);
-        if (cache == null) {
-            cache = new RedisCache<K, V>(this, keyPrefix + name, cacheLruSize, cacheKeysCodec);
-            caches.put(name, cache);
-        }
-        return cache;
+        return caches.computeIfAbsent(name,
+			k -> new RedisCache<K, V>(this, keyPrefix + name, cacheLruSize, cacheKeysCodec));
     }
 
-	public ConcurrentMap<String, Cache> getCaches() {
+	public Map<String, Cache> getCaches() {
 		return caches;
 	}
 

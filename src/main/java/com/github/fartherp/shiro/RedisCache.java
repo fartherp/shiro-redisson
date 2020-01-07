@@ -17,9 +17,12 @@ package com.github.fartherp.shiro;
 
 import com.github.fartherp.shiro.exception.CachePrincipalNotImplementsAssignedException;
 import com.github.fartherp.shiro.exception.PrincipalNullException;
+import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
+import com.googlecode.concurrentlinkedhashmap.Weighers;
 import org.apache.shiro.cache.Cache;
 import org.apache.shiro.cache.CacheException;
 import org.apache.shiro.subject.PrincipalCollection;
+import org.apache.shiro.util.Assert;
 import org.redisson.api.RBucket;
 import org.redisson.api.RScoredSortedSet;
 import org.redisson.client.codec.Codec;
@@ -28,7 +31,6 @@ import org.redisson.client.protocol.ScoredEntry;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -36,7 +38,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static com.github.fartherp.shiro.Constant.SECONDS;
+import static com.github.fartherp.shiro.Constant.MILLISECONDS_NANO;
 
 /**
  * shiro cache 操作.
@@ -55,17 +57,12 @@ public class RedisCache<K, V> implements Cache<K, V> {
 	private final Map<String, Object> lruMap;
 
     public RedisCache(RedisCacheManager redisCacheManager, String keyPrefix, int cacheLruSize, Codec cacheKeysCodec) {
+		Assert.notNull(redisCacheManager, "redisCacheManager is no null");
         this.redisCacheManager = redisCacheManager;
         this.cacheKeyPrefix = keyPrefix;
         this.cacheKeys = redisCacheManager.getRedissonClient().getScoredSortedSet(this.cacheKeyPrefix, cacheKeysCodec);
-		this.lruMap = new LinkedHashMap<String, Object>(cacheLruSize, 0.75F, true) {
-			private static final long serialVersionUID = 8936289417496258606L;
-
-			@Override
-			protected boolean removeEldestEntry(Map.Entry<String, Object> eldest) {
-				return size() > cacheLruSize;
-			}
-		};
+		this.lruMap = new ConcurrentLinkedHashMap.Builder<String, Object>()
+			.maximumWeightedCapacity(cacheLruSize).weigher(Weighers.singleton()).build();
     }
 
     private String getRedisCacheKey(K key) {
@@ -112,7 +109,7 @@ public class RedisCache<K, V> implements Cache<K, V> {
         long ttl = redisCacheManager.getTtl();
         v.set(value, ttl, TimeUnit.MILLISECONDS);
 
-        cacheKeys.add(LocalDateTimeUtilies.getTimestamp(o -> o.plusNanos(ttl * SECONDS * SECONDS)), key);
+        cacheKeys.add(LocalDateTimeUtilies.getTimestamp(o -> o.plusNanos(ttl * MILLISECONDS_NANO)), key);
         return value;
     }
 

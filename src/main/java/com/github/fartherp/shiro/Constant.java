@@ -39,6 +39,11 @@ public interface Constant {
 	long THIRTY_MINUTES = 30 * MINUTE;
 
 	/**
+	 * 毫秒转纳秒单位
+	 */
+	long MILLISECONDS_NANO = SECONDS * SECONDS;
+
+	/**
 	 * cache前缀
 	 */
 	String DEFAULT_CACHE_KEY_PREFIX = "shiro:cache:";
