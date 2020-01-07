@@ -99,9 +99,8 @@ public class RedisSessionDAO extends AbstractSessionDAO {
 			DEFAULT_REDISSON_LRU_OBJ_CAPACITY);
 	}
 
-    public RedisSessionDAO(RedisCacheManager redisCacheManager, String sessionKeyPrefix,
-						   ExpireType expireType, boolean sessionInMemoryEnabled,
-						   long sessionInMemoryTimeout, CodecType codecType, int sessionLruSize) {
+    public RedisSessionDAO(RedisCacheManager redisCacheManager, String sessionKeyPrefix, ExpireType expireType,
+		boolean sessionInMemoryEnabled, long sessionInMemoryTimeout, CodecType codecType, int sessionLruSize) {
 		Assert.notNull(redisCacheManager, "redisCacheManager is no null");
         this.redisCacheManager = redisCacheManager;
         this.sessionKeyPrefix = StringUtils.hasText(sessionKeyPrefix) ? sessionKeyPrefix : DEFAULT_SESSION_KEY_PREFIX;
@@ -156,11 +155,13 @@ public class RedisSessionDAO extends AbstractSessionDAO {
 		if (expire == ExpireType.DEFAULT_EXPIRE.type) {
 			long milliSeconds = sessionWrapper.getTimeout();
 			s.set(sessionWrapper, milliSeconds, TimeUnit.MILLISECONDS);
-			timestamp = LocalDateTimeUtilies.getTimestamp(o -> o.plusNanos(milliSeconds * MILLISECONDS_NANO));
+			timestamp = LocalDateTimeUtilies
+				.getTimestamp(o -> o.plusNanos(milliSeconds * MILLISECONDS_NANO));
 		} else if (expire == ExpireType.CUSTOM_EXPIRE.type) {
 			long milliSeconds = redisCacheManager.getTtl();
 			s.set(sessionWrapper, milliSeconds, TimeUnit.MILLISECONDS);
-			timestamp = LocalDateTimeUtilies.getTimestamp(o -> o.plusNanos(milliSeconds * MILLISECONDS_NANO));
+			timestamp = LocalDateTimeUtilies
+				.getTimestamp(o -> o.plusNanos(milliSeconds * MILLISECONDS_NANO));
 		} else {
 			s.set(sessionWrapper);
 			timestamp = Long.MAX_VALUE;
