@@ -54,7 +54,8 @@ public class ClearCacheTest extends BaseTest {
         redisCacheManager.getCache("clearCache");
 
         Thread.sleep(1500);
-		clearCache.clearSession();
-		clearCache.clearCache();
+		long currentTimeMillis = System.currentTimeMillis();
+		clearCache.clearSession(currentTimeMillis);
+		clearCache.clearCache(currentTimeMillis);
     }
 }
