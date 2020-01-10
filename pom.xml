@@ -391,7 +391,7 @@
 					<artifactId>maven-surefire-plugin</artifactId>
 					<version>3.0.0-M3</version>
 					<configuration>
-						<argLine>${argLine} -Djdk.attach.allowAttachSelf</argLine>
+						<argLine>${argLine} -Xmx2048m</argLine>
 						<systemProperties>
 							<property>
 								<name>derby.stream.error.file</name>
