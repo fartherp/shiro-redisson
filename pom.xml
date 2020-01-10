@@ -264,6 +264,24 @@
                         </execution>
                     </executions>
                 </plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-surefire-plugin</artifactId>
+					<version>3.0.0-M3</version>
+					<configuration>
+						<argLine>-Xmx2048m</argLine>
+						<systemProperties>
+							<property>
+								<name>derby.stream.error.file</name>
+								<value>${project.build.directory}/derby.log</value>
+							</property>
+							<property>
+								<name>derby.system.home</name>
+								<value>${project.build.directory}</value>
+							</property>
+						</systemProperties>
+					</configuration>
+				</plugin>
                 <plugin>
                     <groupId>org.eluder.coveralls</groupId>
                     <artifactId>coveralls-maven-plugin</artifactId>
@@ -385,24 +403,6 @@
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-jxr-plugin</artifactId>
 					<version>3.0.0</version>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-surefire-plugin</artifactId>
-					<version>3.0.0-M3</version>
-					<configuration>
-						<argLine>-Xmx2048m</argLine>
-						<systemProperties>
-							<property>
-								<name>derby.stream.error.file</name>
-								<value>${project.build.directory}/derby.log</value>
-							</property>
-							<property>
-								<name>derby.system.home</name>
-								<value>${project.build.directory}</value>
-							</property>
-						</systemProperties>
-					</configuration>
 				</plugin>
             </plugins>
         </pluginManagement>
