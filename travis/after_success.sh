@@ -36,13 +36,13 @@ if [ $TRAVIS_REPO_SLUG == "fartherp/shiro-redisson" ] && [ "$TRAVIS_BRANCH" == "
   if [ $TRAVIS_JDK_VERSION == "openjdk8" ]; then
 
     # Deploy to sonatype
-    ./mvnw clean deploy -Dmaven.test.skip=true -q
+    ./mvnw clean deploy -Dmaven.test.skip=true -q --settings ./travis/settings.xml
     echo -e "Successfully deployed SNAPSHOT artifacts to Sonatype under Travis job ${TRAVIS_JOB_NUMBER}"
 
-    ./mvnw clean test jacoco:report coveralls:report -q -DrepoToken="${COVERALLS_TOKEN}"
+    ./mvnw clean test jacoco:report coveralls:report -q -DrepoToken="${COVERALLS_TOKEN}" --settings ./travis/settings.xml
     echo -e "Successfully ran coveralls under Travis job ${TRAVIS_JOB_NUMBER}"
 
-    ./mvnw sonar:sonar -Dsonar.projectKey=CK_shiro-redisson
+    ./mvnw sonar:sonar -Dsonar.projectKey=fartherp_shiro-redisson
 
     # Deploy to site
     # Cannot currently run site this way
