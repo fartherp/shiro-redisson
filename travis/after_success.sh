@@ -39,7 +39,7 @@ if [ $TRAVIS_REPO_SLUG == "fartherp/shiro-redisson" ] && [ "$TRAVIS_BRANCH" == "
     ./mvnw clean deploy -Dmaven.test.skip=true -q --settings ./travis/settings.xml
     echo -e "Successfully deployed SNAPSHOT artifacts to Sonatype under Travis job ${TRAVIS_JOB_NUMBER}"
 
-    ./mvnw clean test jacoco:report coveralls:report -q -DrepoToken="${COVERALLS_TOKEN}"
+    ./mvnw clean test jacoco:report coveralls:report -q -DrepoToken="${COVERALLS_TOKEN}" -Dmaven.test.redirectTestOutputToFile=true
     echo -e "Successfully ran coveralls under Travis job ${TRAVIS_JOB_NUMBER}"
 
     ./mvnw sonar:sonar -Dsonar.projectKey=fartherp_shiro-redisson
