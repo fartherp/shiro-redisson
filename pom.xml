@@ -386,6 +386,24 @@
 					<artifactId>maven-jxr-plugin</artifactId>
 					<version>3.0.0</version>
 				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-surefire-plugin</artifactId>
+					<version>3.0.0-M3</version>
+					<configuration>
+						<argLine>${argLine} -Djdk.attach.allowAttachSelf</argLine>
+						<systemProperties>
+							<property>
+								<name>derby.stream.error.file</name>
+								<value>${project.build.directory}/derby.log</value>
+							</property>
+							<property>
+								<name>derby.system.home</name>
+								<value>${project.build.directory}</value>
+							</property>
+						</systemProperties>
+					</configuration>
+				</plugin>
             </plugins>
         </pluginManagement>
         <resources>
