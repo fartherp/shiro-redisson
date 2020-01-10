@@ -36,6 +36,7 @@
         <redisson.version>3.11.0</redisson.version>
         <shiro-core.version>1.3.2</shiro-core.version>
 		<logback.version>1.2.3</logback.version>
+		<surefire.version>3.0.0-M3</surefire.version>
     </properties>
 
     <scm>
@@ -267,7 +268,7 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-surefire-plugin</artifactId>
-					<version>3.0.0-M3</version>
+					<version>${surefire.version}</version>
 					<configuration>
 						<argLine>${argLine} -Xmx2048m</argLine>
 						<systemProperties>
@@ -281,6 +282,11 @@
 							</property>
 						</systemProperties>
 					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-surefire-report-plugin</artifactId>
+					<version>${surefire.version}</version>
 				</plugin>
                 <plugin>
                     <groupId>org.eluder.coveralls</groupId>
