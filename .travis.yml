@@ -1,7 +1,11 @@
 language: java
 
 jdk:
-  - oraclejdk8
+  - openjdk-ea
+  - openjdk13
+  - openjdk12
+  - openjdk11
+  - openjdk8
 
 services:
   - redis-server
