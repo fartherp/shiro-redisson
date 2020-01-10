@@ -207,7 +207,7 @@ public class RedisSessionDAO extends AbstractSessionDAO {
         RBucket<SessionWrapper> s = getBucket(key);
         s.delete();
 
-		sessionKeys.removeAsync(key);
+		sessionKeys.remove(key);
     }
 
 	@Override

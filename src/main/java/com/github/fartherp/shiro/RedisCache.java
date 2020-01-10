@@ -118,7 +118,7 @@ public class RedisCache<K, V> implements Cache<K, V> {
         RBucket<V> v = getBucket(key);
         V value = v.get();
         v.delete();
-        cacheKeys.removeAsync(key);
+        cacheKeys.remove(key);
         return value;
     }
 
@@ -126,9 +126,9 @@ public class RedisCache<K, V> implements Cache<K, V> {
     public void clear() throws CacheException {
         for (K key : cacheKeys) {
             RBucket<V> v = getBucket(key);
-            v.deleteAsync();
+            v.delete();
         }
-        cacheKeys.deleteAsync();
+        cacheKeys.delete();
     }
 
 	@Override
