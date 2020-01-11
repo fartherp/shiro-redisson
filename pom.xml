@@ -356,6 +356,7 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-compiler-plugin</artifactId>
+					<version>${compiler.version}</version>
 					<configuration>
 						<optimize>true</optimize>
 						<!-- Slightly faster builds, see https://issues.apache.org/jira/browse/MCOMPILER-209 -->
