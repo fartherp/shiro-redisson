@@ -25,7 +25,7 @@ import java.util.function.Function;
  * @author CK
  * @date 2019/1/25
  */
-public class LocalDateTimeUtilies {
+public final class LocalDateTimeUtilies {
 
 	private LocalDateTimeUtilies() {}
 
