@@ -27,6 +27,8 @@ import java.util.function.Function;
  */
 public class LocalDateTimeUtilies {
 
+	private LocalDateTimeUtilies() {}
+
 	/**
 	 * 时间操作转换成毫秒
 	 * @param function 实际操作
