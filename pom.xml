@@ -51,11 +51,12 @@
 		 | Plugins versions
 		-->
 		<checkstyle.plugin>3.1.0</checkstyle.plugin>
+		<clean.version>3.1.0</clean.version>
 		<compiler.version>3.8.0</compiler.version>
 		<coveralls.version>4.3.0</coveralls.version>
 		<enforcer.version>3.0.0-M1</enforcer.version>
 		<gpg.version>1.6</gpg.version>
-		<jacoco.version>0.8.2</jacoco.version>
+		<jacoco.version>0.8.5</jacoco.version>
 		<javadoc.version>3.0.1</javadoc.version>
 		<jxr.version>3.0.0</jxr.version>
 		<license.version>3.0</license.version>
@@ -243,6 +244,11 @@
     <build>
         <pluginManagement>
             <plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-clean-plugin</artifactId>
+					<version>${clean.version}</version>
+				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-enforcer-plugin</artifactId>
