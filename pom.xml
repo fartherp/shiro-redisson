@@ -427,7 +427,7 @@
 										<X-Compile-Target-JDK>${maven.compiler.target}</X-Compile-Target-JDK>
 									</manifestEntries>
 								</archive>
-                                <additionalparam>-Xdoclint:none</additionalparam>
+                                <additionalJOption>-Xdoclint:none</additionalJOption>
                             </configuration>
                         </execution>
                     </executions>
