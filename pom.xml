@@ -351,8 +351,9 @@
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-compiler-plugin</artifactId>
 					<configuration>
-						<source>${maven.compiler.testSource}</source>
-						<target>${maven.compiler.testTarget}</target>
+						<optimize>true</optimize>
+						<!-- Slightly faster builds, see https://issues.apache.org/jira/browse/MCOMPILER-209 -->
+						<useIncrementalCompilation>false</useIncrementalCompilation>
 						<testCompilerArgument>${maven.compiler.testCompilerArgument}</testCompilerArgument>
 					</configuration>
 				</plugin>
