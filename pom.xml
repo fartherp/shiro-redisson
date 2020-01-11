@@ -305,7 +305,6 @@
 					<version>${jar.version}</version>
 					<configuration>
 						<archive>
-							<manifestFile>${project.build.directory}/MANIFEST.MF</manifestFile>
 							<manifest>
 								<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
 								<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
