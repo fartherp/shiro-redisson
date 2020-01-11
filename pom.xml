@@ -32,6 +32,7 @@
 		 | General configuration
 		-->
 		<maven.min-version>3.2.5</maven.min-version>
+		<module.name>com.github.fartherp</module.name>
 
 		<!--
 		 | Maven confirmation
@@ -48,15 +49,25 @@
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
 		<!--
+		 | Dependency versions
+		-->
+		<fluido.version>1.7</fluido.version>
+		<wagon-git.version>2.0.3</wagon-git.version> <!-- Do not upgrade to 2.0.4 as it does not work with ssh properly -->
+		<wagon-ssh.version>3.3.1</wagon-ssh.version>
+
+		<!--
 		 | Plugins versions
 		-->
 		<checkstyle.plugin>3.1.0</checkstyle.plugin>
 		<clean.version>3.1.0</clean.version>
 		<compiler.version>3.8.0</compiler.version>
 		<coveralls.version>4.3.0</coveralls.version>
+		<deploy.version>3.0.0-M1</deploy.version>
 		<enforcer.version>3.0.0-M1</enforcer.version>
 		<gpg.version>1.6</gpg.version>
+		<install.version>3.0.0-M1</install.version>
 		<jacoco.version>0.8.5</jacoco.version>
+		<jar.version>3.1.1</jar.version>
 		<javadoc.version>3.0.1</javadoc.version>
 		<jxr.version>3.0.0</jxr.version>
 		<license.version>3.0</license.version>
@@ -65,6 +76,7 @@
 		<release.version>2.5.3</release.version>
 		<resource.version>3.1.0</resource.version>
 		<scm.version>1.11.1</scm.version>
+		<site.version>3.7.1</site.version>
 		<source.version>3.0.1</source.version>
 		<surefire.version>3.0.0-M3</surefire.version>
 
@@ -160,6 +172,13 @@
                         <groupId>org.eluder.coveralls</groupId>
                         <artifactId>coveralls-maven-plugin</artifactId>
                     </plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-site-plugin</artifactId>
+						<configuration>
+							<locales>en,es,ja,fr,zh_CN,ko</locales>
+						</configuration>
+					</plugin>
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-pmd-plugin</artifactId>
@@ -279,6 +298,67 @@
 							</configuration>
 						</execution>
 					</executions>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-jar-plugin</artifactId>
+					<version>${jar.version}</version>
+					<configuration>
+						<archive>
+							<manifestFile>${project.build.directory}/MANIFEST.MF</manifestFile>
+							<manifest>
+								<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+								<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+							</manifest>
+							<manifestEntries>
+								<Automatic-Module-Name>${module.name}</Automatic-Module-Name>
+								<Implementation-Build-Date>${maven.build.timestamp}</Implementation-Build-Date>
+								<X-Compile-Source-JDK>${maven.compiler.source}</X-Compile-Source-JDK>
+								<X-Compile-Target-JDK>${maven.compiler.target}</X-Compile-Target-JDK>
+							</manifestEntries>
+						</archive>
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-deploy-plugin</artifactId>
+					<version>${deploy.version}</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-install-plugin</artifactId>
+					<version>${install.version}</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-site-plugin</artifactId>
+					<version>${site.version}</version>
+					<executions>
+						<execution>
+							<id>attach-descriptor</id>
+							<goals>
+								<goal>attach-descriptor</goal>
+							</goals>
+						</execution>
+					</executions>
+					<dependencies>
+						<dependency>
+							<groupId>net.trajano.wagon</groupId>
+							<artifactId>wagon-git</artifactId>
+							<version>${wagon-git.version}</version>
+						</dependency>
+						<dependency>
+							<groupId>org.apache.maven.wagon</groupId>
+							<artifactId>wagon-ssh</artifactId>
+							<version>${wagon-ssh.version}</version>
+						</dependency>
+						<!-- Additional entries for version site tracking only -->
+						<dependency>
+							<groupId>org.apache.maven.skins</groupId>
+							<artifactId>maven-fluido-skin</artifactId>
+							<version>${fluido.version}</version>
+						</dependency>
+					</dependencies>
 				</plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
