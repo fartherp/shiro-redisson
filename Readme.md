@@ -17,7 +17,7 @@
 4.支持redisson提供的编码类型，https://github.com/redisson/redisson/wiki/4.-data-serialization
 ```
 ## JDK
-> 1.8
+> 1.8/11/12/13
 
 ## java使用
 ``` java
