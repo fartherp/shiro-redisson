@@ -61,7 +61,7 @@
     </issueManagement>
     <ciManagement>
         <system>Travis CI</system>
-        <url>https://travis-ci.com/fartherp/shiro-redisson</url>
+        <url>https://travis-ci.org/fartherp/shiro-redisson</url>
     </ciManagement>
     <distributionManagement>
         <repository>
