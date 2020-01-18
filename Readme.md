@@ -5,7 +5,8 @@
 [![Sonatype Nexus (Snapshots)](https://img.shields.io/nexus/s/https/oss.sonatype.org/com.github.fartherp/shiro-redisson.svg)](https://oss.sonatype.org/content/repositories/snapshots/com/github/fartherp/shiro-redisson/)
 [![GitHub release](https://img.shields.io/github/release/fartherp/shiro-redisson.svg)](https://github.com/fartherp/shiro-redisson/releases)
 [![License](https://img.shields.io/badge/license-Apache%202-4EB1BA.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
-[![Project Stats](https://www.openhub.net/p/shiro-redisson/widgets/project_thin_badge.gif)](https://www.openhub.net/p/shiro-redisson)
+[![Project Stats](https://www.openhub.net/p/shiro-redisson/widgets/project_thin_badge.gif)](https://www.openhub.net/p/shiro-redisson)  
+[![Quality gate](https://sonarcloud.io/api/project_badges/quality_gate?project=fartherp_javacode)](https://sonarcloud.io/dashboard?id=fartherp_javacode)
 
 功能简介
 
@@ -16,7 +17,7 @@
 4.支持redisson提供的编码类型，https://github.com/redisson/redisson/wiki/4.-data-serialization
 ```
 ## JDK
-> 1.8
+> 1.8/11/12/13
 
 ## java使用
 ``` java
